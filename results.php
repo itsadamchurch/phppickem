@@ -23,21 +23,24 @@ if ($type === 'playoffs') {
 	}
 	$week = $round;
 	$cutoffDateTime = null;
-	$sql = "select gameTimeEastern from " . DB_PREFIX . "playoff_schedule where roundNum = " . $round . " and is_bye = 0 and gameTimeEastern is not null order by gameTimeEastern limit 1";
+	$lastGameTime = null;
+	$sql = "select min(gameTimeEastern) as firstGameTime, max(gameTimeEastern) as lastGameTime from " . DB_PREFIX . "playoff_schedule where roundNum = " . $round . " and is_bye = 0 and gameTimeEastern is not null";
 	$query = $mysqli->query($sql);
 	if ($query->num_rows > 0) {
 		$row = $query->fetch_assoc();
-		$cutoffDateTime = $row['gameTimeEastern'];
+		$cutoffDateTime = $row['firstGameTime'];
+		$lastGameTime = $row['lastGameTime'];
 	}
 	$query->free;
-	$weekExpired = (!empty($cutoffDateTime) && (date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($cutoffDateTime))) ? 1 : 0;
+	$weekExpired = (!empty($lastGameTime) && (date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($lastGameTime))) ? 1 : 0;
 } else {
 	if (empty($week)) {
 		//get current week
 		$week = (int)$statsService->getCurrentWeek();
 	}
 	$cutoffDateTime = $statsService->getCutoffDateTime($week);
-	$weekExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($cutoffDateTime)) ? 1 : 0);
+	$lastGameTime = $statsService->getLastGameTime($week);
+	$weekExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($lastGameTime)) ? 1 : 0);
 }
 
 include('includes/header.php');

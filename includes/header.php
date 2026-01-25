@@ -46,8 +46,27 @@ header('X-UA-Compatible:IE=Edge,chrome=1'); //IE8 respects this but not the meta
 							<ul class="nav navbar-nav">
 								<li<?php echo (($activeTab == 'home') ? ' class="active"' : ''); ?>><a href="./">Home</a></li>
 								<?php if ($user->userName !== 'admin') { ?>
-								<li><a href="entry_form.php<?php echo ((!empty($_GET['week'])) ? '?week=' . (int)$_GET['week'] : ''); ?>">Entry Form</a></li>
+								<?php
+									$playoffsAvailable = false;
+									$nowEastern = new DateTime("now", new DateTimeZone("America/New_York"));
+									$sql = "select min(gameTimeEastern) as firstGameTime from " . DB_PREFIX . "playoff_schedule where is_bye = 0";
+									$query = $mysqli->query($sql);
+									if ($query) {
+										$row = $query->fetch_assoc();
+										if (!empty($row['firstGameTime'])) {
+											$firstPlayoffTime = new DateTime($row['firstGameTime'], new DateTimeZone("America/New_York"));
+											if ($firstPlayoffTime <= $nowEastern) {
+												$playoffsAvailable = true;
+											}
+										}
+										$query->free;
+									}
+								?>
+								<?php if ($playoffsAvailable) { ?>
 								<li<?php echo (($activeTab == 'playoffs') ? ' class="active"' : ''); ?>><a href="entry_form.php?type=playoffs">Playoff Picks</a></li>
+								<?php } else { ?>
+								<li><a href="entry_form.php<?php echo ((!empty($_GET['week'])) ? '?week=' . (int)$_GET['week'] : ''); ?>">Entry Form</a></li>
+								<?php } ?>
 								<?php } ?>
 								<li><a href="results.php<?php echo ((!empty($_GET['week'])) ? '?week=' . (int)$_GET['week'] : ''); ?>">Results</a></li>
 								<li><a href="standings.php">Standings</a></li>

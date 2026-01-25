@@ -34,7 +34,6 @@ if ($_POST['action'] == 'Submit') {
 	}
 
 	$week = $_POST['week'];
-	$cutoffDateTime = $statsService->getCutoffDateTime($week);
 
 	//update summary table
 	$sql = "delete from " . DB_PREFIX . "picksummary where weekNum = " . $_POST['week'] . " and userID = " . $user->userID . ";";
@@ -43,7 +42,7 @@ if ($_POST['action'] == 'Submit') {
 	$mysqli->query($sql) or die('Error updating picks summary: ' . $mysqli->error);
 
 	//loop through non-expire weeks and update picks
-	$sql = "select * from " . DB_PREFIX . "schedule where weekNum = " . $_POST['week'] . " and (DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) < gameTimeEastern and DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) < '" . $cutoffDateTime . "');";
+	$sql = "select * from " . DB_PREFIX . "schedule where weekNum = " . $_POST['week'] . " and (DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) < gameTimeEastern);";
 	$query = $mysqli->query($sql);
 	if ($query->num_rows > 0) {
 		while ($row = $query->fetch_assoc()) {
@@ -62,11 +61,27 @@ if ($_POST['action'] == 'Submit') {
 } else {
 	if ($type === 'playoffs') {
 		if (empty($round)) {
-			$sql = "select distinct roundNum from " . DB_PREFIX . "playoff_schedule order by roundNum limit 1";
+			$sql = "select roundNum, min(gameTimeEastern) as firstGameTime, max(gameTimeEastern) as lastGameTime ";
+			$sql .= "from " . DB_PREFIX . "playoff_schedule where is_bye = 0 group by roundNum order by roundNum asc";
 			$query = $mysqli->query($sql);
+			$nowEastern = new DateTime("now", new DateTimeZone("America/New_York"));
 			if ($query->num_rows > 0) {
-				$row = $query->fetch_assoc();
-				$round = (int)$row['roundNum'];
+				while ($row = $query->fetch_assoc()) {
+					if (empty($row['firstGameTime'])) {
+						continue;
+					}
+					$firstGameTime = new DateTime($row['firstGameTime'], new DateTimeZone("America/New_York"));
+					$lastGameTime = !empty($row['lastGameTime']) ? new DateTime($row['lastGameTime'], new DateTimeZone("America/New_York")) : $firstGameTime;
+					if ($nowEastern < $firstGameTime) {
+						$round = (int)$row['roundNum'];
+						break;
+					}
+					if ($nowEastern >= $firstGameTime && $nowEastern <= $lastGameTime) {
+						$round = (int)$row['roundNum'];
+						break;
+					}
+					$round = (int)$row['roundNum'];
+				}
 			}
 			$query->free;
 		}
@@ -76,7 +91,6 @@ if ($_POST['action'] == 'Submit') {
 			//get current week
 			$week = (int)$statsService->getCurrentWeek();
 		}
-		$cutoffDateTime = $statsService->getCutoffDateTime($week);
 		$firstGameTime = $statsService->getFirstGameTime($week);
 	}
 }
@@ -243,7 +257,7 @@ include('includes/column_right.php');
 		$sql .= "where s.roundNum = " . $round . " and s.is_bye = 0 ";
 		$sql .= "order by s.gameTimeEastern, s.playoffGameID";
 	} else {
-		$sql = "select s.*, (DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) > gameTimeEastern or DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) > '" . $cutoffDateTime . "')  as expired ";
+		$sql = "select s.*, (DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) > gameTimeEastern)  as expired ";
 		$sql .= "from " . DB_PREFIX . "schedule s ";
 		$sql .= "inner join " . DB_PREFIX . "teams ht on s.homeID = ht.teamID ";
 		$sql .= "inner join " . DB_PREFIX . "teams vt on s.visitorID = vt.teamID ";

@@ -53,6 +53,19 @@ class StatsService {
 		$query->free;
 		die('Error getting first game time: ' . $mysqli->error);
 	}
+
+	public function getLastGameTime($week) {
+		//get the last game time for a given week
+		global $mysqli;
+		$sql = "select gameTimeEastern from " . DB_PREFIX . "schedule where weekNum = " . $week . " order by gameTimeEastern desc limit 1";
+		$query = $mysqli->query($sql);
+		if ($query->num_rows > 0) {
+			$row = $query->fetch_assoc();
+			return $row['gameTimeEastern'];
+		}
+		$query->free;
+		die('Error getting last game time: ' . $mysqli->error);
+	}
 	
 	public function getPickID($gameID, $userID) {
 		//get the pick id for a particular game

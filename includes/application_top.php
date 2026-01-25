@@ -101,8 +101,14 @@ if ($_SESSION['loggedInUser'] === 'admin' && $_SESSION['logged'] === 'yes') {
 	} else {
 		$cutoffDateTime = $statsService->getCutoffDateTime($currentWeek);
 		$firstGameTime = $statsService->getFirstGameTime($currentWeek);
+		$lastGameTime = $statsService->getLastGameTime($currentWeek);
 
 		$firstGameExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($firstGameTime)) ? true : false);
-		$weekExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($cutoffDateTime)) ? true : false);
+		if (!empty($lastGameTime)) {
+			$weekExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($lastGameTime)) ? true : false);
+			$cutoffDateTime = $lastGameTime;
+		} else {
+			$weekExpired = false;
+		}
 	}
 }
