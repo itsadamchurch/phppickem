@@ -134,6 +134,10 @@ class UserService {
 		$mail->Send();
 	}
 
+	public function generateConfirmationToken($username) {
+		return urlencode($username);
+	}
+
 	public function updateUserProfile($userID, $firstname, $lastname, $email, $password = '') {
 		global $mysqli;
 		$fields = array(

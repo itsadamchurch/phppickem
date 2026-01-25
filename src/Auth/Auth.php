@@ -24,4 +24,24 @@ class Auth {
 
 		return null;
 	}
+
+	public function validateLogin($username, $password) {
+		return $this->login->validate_credentials($username, $password);
+	}
+
+	public function loginUser($user) {
+		$_SESSION['logged'] = 'yes';
+		$_SESSION['loggedInUser'] = $user->userName;
+		$_SESSION['is_admin'] = $user->is_admin;
+	}
+
+	public function clearSession() {
+		$_SESSION = array();
+	}
+
+	public function logout() {
+		unset($_SESSION['logged']);
+		unset($_SESSION['loggedInUser']);
+		unset($_SESSION['is_admin']);
+	}
 }

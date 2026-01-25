@@ -26,11 +26,18 @@ class Login {
 	function validate_password() {
 		$user_name = $this->no_injections($_POST['username']);
 		$password = $this->no_injections($_POST['password']);
+		return $this->validate_credentials($user_name, $password, true);
+	}
+
+	function validate_credentials($user_name, $password, $do_redirect = false) {
 		$user = $this->get_user($user_name);
 		if (empty($user) || empty($password)) {
-			$_SESSION = array();
-			header('Location: '.SITE_URL.'login.php?login=failed');
-			exit;
+			if ($do_redirect) {
+				$_SESSION = array();
+				header('Location: '.SITE_URL.'login.php?login=failed');
+				exit;
+			}
+			return false;
 		}
 
 		$stored_hash = $user->password;
@@ -57,15 +64,21 @@ class Login {
 				$mysqli = $GLOBALS['mysqli'];
 				$mysqli->query($sql);
 			}
-			$_SESSION['logged'] = 'yes';
-			$_SESSION['loggedInUser'] = $user->userName;
-			$_SESSION['is_admin'] = $user->is_admin;
-			header('Location: '.SITE_URL);
-			exit;
+			if ($do_redirect) {
+				$_SESSION['logged'] = 'yes';
+				$_SESSION['loggedInUser'] = $user->userName;
+				$_SESSION['is_admin'] = $user->is_admin;
+				header('Location: '.SITE_URL);
+				exit;
+			}
+			return $user;
 		} else {
-			$_SESSION = array();
-			header('Location: '.SITE_URL.'login.php?login=failed');
-			exit;
+			if ($do_redirect) {
+				$_SESSION = array();
+				header('Location: '.SITE_URL.'login.php?login=failed');
+				exit;
+			}
+			return false;
 		}
 	}
 

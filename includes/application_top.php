@@ -68,7 +68,7 @@ if (class_exists('App\\Auth\\Login')) {
 $auth = class_exists('App\\Auth\\Auth') ? new \App\Auth\Auth($login) : null;
 $adminUser = $auth ? $auth->getAdminUser() : $login->get_user('admin');
 
-$okFiles = array('login.php', 'signup.php', 'password_reset.php', 'buildSchedule.php');
+$okFiles = array('login.php', 'signup.php', 'password_reset.php', 'buildSchedule.php', 'logout.php');
 if ($auth) {
 	$user = $auth->enforceLogin($okFiles);
 } else if (!in_array(basename($_SERVER['PHP_SELF']), $okFiles)) {

@@ -36,7 +36,8 @@ if (isset($_POST['submit'])) {
 							$display = '<div class="responseError">' . $error . '</div><br/>';
 						} else {
 							$fromEmail = (!empty($adminUser) && !empty($adminUser->email)) ? $adminUser->email : 'admin@yourdomain.com';
-							$userService->sendSignupConfirmation($_POST['email'], $fromEmail, urlencode($username));
+							$confirmToken = $userService->generateConfirmationToken($username);
+							$userService->sendSignupConfirmation($_POST['email'], $fromEmail, $confirmToken);
 							$_SESSION['logged'] = 'yes';
 							$_SESSION['loggedInUser'] = $username;
 							header('Location: ./?login=success');

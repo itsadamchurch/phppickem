@@ -7,7 +7,21 @@ require_once('includes/application_top.php');
 $_SESSION = array();
 
 if(is_array($_POST) && sizeof($_POST) > 0){
-	$login->validate_password();
+	if (class_exists('App\\Auth\\Auth')) {
+		$auth = new \App\Auth\Auth($login);
+		$user = $auth->validateLogin($_POST['username'], $_POST['password']);
+		if ($user) {
+			$auth->loginUser($user);
+			header('Location: '.SITE_URL);
+			exit;
+		} else {
+			$auth->clearSession();
+			header('Location: '.SITE_URL.'login.php?login=failed');
+			exit;
+		}
+	} else {
+		$login->validate_password();
+	}
 }
 
 //require_once('includes/header.php');
