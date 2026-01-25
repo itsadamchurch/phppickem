@@ -38,6 +38,14 @@ To stop:
 docker compose down
 ```
 
+## Composer (autoloading)
+
+If you want Composer autoloading (PSR-4):
+
+```
+composer dump-autoload
+```
+
 ## Logging In
 
 Log in for the first time with admin / admin123.  You may change your password once you are logged in.

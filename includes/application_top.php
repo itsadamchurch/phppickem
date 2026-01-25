@@ -5,6 +5,11 @@ require('includes/functions.php');
 require('includes/classes/class.phpmailer.php');
 require('includes/htmlpurifier/HTMLPurifier.auto.php');
 
+$autoloadPath = __DIR__ . '/../vendor/autoload.php';
+if (is_readable($autoloadPath)) {
+	require_once $autoloadPath;
+}
+
 if (session_status() === PHP_SESSION_NONE) {
 	session_start();
 }
@@ -47,8 +52,16 @@ if ($mysqli) {
 	die('Database not connected.  Please check your config file for proper installation.');
 }
 
-require('includes/classes/login.php');
-$login = new Login;
+if (!class_exists('App\\Auth\\Login') && is_readable(__DIR__ . '/../src/Auth/Login.php')) {
+	require_once __DIR__ . '/../src/Auth/Login.php';
+}
+
+if (class_exists('App\\Auth\\Login')) {
+	$login = new \App\Auth\Login();
+} else {
+	require('includes/classes/login.php');
+	$login = new Login;
+}
 $adminUser = $login->get_user('admin');
 
 $okFiles = array('login.php', 'signup.php', 'password_reset.php', 'buildSchedule.php');

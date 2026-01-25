@@ -1,0 +1,10 @@
+{
+  "name": "phppickem/phppickem",
+  "description": "PHP Pick 'Em",
+  "type": "project",
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}
