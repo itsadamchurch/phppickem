@@ -55,6 +55,9 @@ if ($mysqli) {
 if (!class_exists('App\\Auth\\Login') && is_readable(__DIR__ . '/../src/Auth/Login.php')) {
 	require_once __DIR__ . '/../src/Auth/Login.php';
 }
+if (!class_exists('App\\Auth\\UserService') && is_readable(__DIR__ . '/../src/Auth/UserService.php')) {
+	require_once __DIR__ . '/../src/Auth/UserService.php';
+}
 
 if (class_exists('App\\Auth\\Login')) {
 	$login = new \App\Auth\Login();
@@ -62,10 +65,13 @@ if (class_exists('App\\Auth\\Login')) {
 	require('includes/classes/login.php');
 	$login = new Login;
 }
-$adminUser = $login->get_user('admin');
+$auth = class_exists('App\\Auth\\Auth') ? new \App\Auth\Auth($login) : null;
+$adminUser = $auth ? $auth->getAdminUser() : $login->get_user('admin');
 
 $okFiles = array('login.php', 'signup.php', 'password_reset.php', 'buildSchedule.php');
-if (!in_array(basename($_SERVER['PHP_SELF']), $okFiles)) {
+if ($auth) {
+	$user = $auth->enforceLogin($okFiles);
+} else if (!in_array(basename($_SERVER['PHP_SELF']), $okFiles)) {
 	if (empty($_SESSION['logged']) || $_SESSION['logged'] !== 'yes') {
 		header( 'Location: login.php' );
 		exit;

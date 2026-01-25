@@ -29,37 +29,52 @@ if (isset($_POST['submit'])) {
 				if ($query->num_rows > 0) {
 					$display = '<div class="responseError">User already exists, please try another username.</div><br/>';
 				} else {
-					$sql = "SELECT email FROM " . DB_PREFIX . "users WHERE email='".$mysqli->real_escape_string($email)."';";
-					$query = $mysqli->query($sql);
-					if ($query->num_rows > 0) {
-						$display = '<div class="responseError">Email address already exists.  If this is your email account, please log in or reset your password.</div><br/>';
+					if (class_exists('App\\Auth\\UserService')) {
+						$userService = new \App\Auth\UserService();
+						list($ok, $error) = $userService->createUser($username, $password, $firstname, $lastname, $email);
+						if (!$ok) {
+							$display = '<div class="responseError">' . $error . '</div><br/>';
+						} else {
+							$fromEmail = (!empty($adminUser) && !empty($adminUser->email)) ? $adminUser->email : 'admin@yourdomain.com';
+							$userService->sendSignupConfirmation($_POST['email'], $fromEmail, urlencode($username));
+							$_SESSION['logged'] = 'yes';
+							$_SESSION['loggedInUser'] = $username;
+							header('Location: ./?login=success');
+							exit;
+						}
 					} else {
-						$secure_password = password_hash($password, PASSWORD_DEFAULT);
-						$sql = "INSERT INTO " . DB_PREFIX . "users (userName, password, salt, firstname, lastname, email, status)
-							VALUES ('".$username."', '".$secure_password."', '', '".$firstname."', '".$lastname."', '".$mysqli->real_escape_string($email)."', 1);";
-						$mysqli->query($sql) or die($mysqli->error);
+						$sql = "SELECT email FROM " . DB_PREFIX . "users WHERE email='".$mysqli->real_escape_string($email)."';";
+						$query = $mysqli->query($sql);
+						if ($query->num_rows > 0) {
+							$display = '<div class="responseError">Email address already exists.  If this is your email account, please log in or reset your password.</div><br/>';
+						} else {
+							$secure_password = password_hash($password, PASSWORD_DEFAULT);
+							$sql = "INSERT INTO " . DB_PREFIX . "users (userName, password, salt, firstname, lastname, email, status)
+								VALUES ('".$username."', '".$secure_password."', '', '".$firstname."', '".$lastname."', '".$mysqli->real_escape_string($email)."', 1);";
+							$mysqli->query($sql) or die($mysqli->error);
 
-						//send confirmation email
-						$mail->IsHTML(true);
+							//send confirmation email
+							$mail->IsHTML(true);
 
-						$mail->From = (!empty($adminUser) && !empty($adminUser->email)) ? $adminUser->email : 'admin@yourdomain.com';
-						$mail->FromName = 'NFL Pick \'Em Admin'; // the name field of the form
+							$mail->From = (!empty($adminUser) && !empty($adminUser->email)) ? $adminUser->email : 'admin@yourdomain.com';
+							$mail->FromName = 'NFL Pick \'Em Admin'; // the name field of the form
 
-						$mail->AddAddress($_POST['email']); // the form will be sent to this address
-						$mail->Subject = 'NFL Pick \'Em Confirmation'; // the subject of email
+							$mail->AddAddress($_POST['email']); // the form will be sent to this address
+							$mail->Subject = 'NFL Pick \'Em Confirmation'; // the subject of email
 
-						// html text block
-						$mail->Body = '<p>Thank you for signing up for the NFL Pick \'Em Pool.  Please click the below link to confirm your account:<br />' . "\n" .
-							SITE_URL . 'signup.php?confirm=' . urlencode($username) . '</p>';
+							// html text block
+							$mail->Body = '<p>Thank you for signing up for the NFL Pick \'Em Pool.  Please click the below link to confirm your account:<br />' . "\n" .
+								SITE_URL . 'signup.php?confirm=' . urlencode($username) . '</p>';
 
-						//$mail->Send();
+							//$mail->Send();
 
-						//header('Location: login.php');
-						//exit;
-						$_SESSION['logged'] = 'yes';
-						$_SESSION['loggedInUser'] = $username;
-						header('Location: ./?login=success');
-						exit;
+							//header('Location: login.php');
+							//exit;
+							$_SESSION['logged'] = 'yes';
+							$_SESSION['loggedInUser'] = $username;
+							header('Location: ./?login=success');
+							exit;
+						}
 					}
 				}
 			} else {

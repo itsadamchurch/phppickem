@@ -8,6 +8,7 @@ if (!$user->is_admin) {
 }
 
 $action = $_GET['action'];
+$userService = class_exists('App\\Auth\\UserService') ? new \App\Auth\UserService() : null;
 switch ($action) {
 	case 'add_action':
 		$firstname = $_POST['firstname'];
@@ -26,16 +27,25 @@ switch ($action) {
 					$username = $mysqli->real_escape_string(str_replace(' ', '_', $_POST['username']));
 					$sql = "SELECT userName FROM " . DB_PREFIX . "users WHERE userName='".$userName."';";
 					$query = $mysqli->query($sql);
-					if ($query->num_rows == 0) {
-						//form is valid, perform insert
-						$secure_password = password_hash($password, PASSWORD_DEFAULT);
-						$sql = "INSERT INTO " . DB_PREFIX . "users (userName, password, salt, firstname, lastname, email, status)
-							VALUES ('".$userName."', '".$secure_password."', '', '".$firstname."', '".$lastname."', '".$email."', 1);";
-						$mysqli->query($sql) or die($mysqli->error);
-
-						$display = '<div class="responseOk">User ' . $userName . ' Updated</div><br/>';
+					if ($userService) {
+						list($ok, $error) = $userService->adminCreateUser($userName, $password, $firstname, $lastname, $email);
+						if ($ok) {
+							$display = '<div class="responseOk">User ' . $userName . ' Updated</div><br/>';
+						} else {
+							$display = '<div class="responseError">' . $error . '</div><br/>';
+						}
 					} else {
-						$display = '<div class="responseError">User already exists, please try another username.</div><br/>';
+						if ($query->num_rows == 0) {
+							//form is valid, perform insert
+							$secure_password = password_hash($password, PASSWORD_DEFAULT);
+							$sql = "INSERT INTO " . DB_PREFIX . "users (userName, password, salt, firstname, lastname, email, status)
+								VALUES ('".$userName."', '".$secure_password."', '', '".$firstname."', '".$lastname."', '".$email."', 1);";
+							$mysqli->query($sql) or die($mysqli->error);
+
+							$display = '<div class="responseOk">User ' . $userName . ' Updated</div><br/>';
+						} else {
+							$display = '<div class="responseError">User already exists, please try another username.</div><br/>';
+						}
 					}
 				} else {
 					$display = '<div class="responseError">Passwords do not match, please try again.</div><br/>';
@@ -59,12 +69,17 @@ switch ($action) {
 		if($my_form->checkEmail($_POST['email'])) { // check for good mail
 			if ($my_form->validate_fields('firstname,lastname,email,userName')) { // comma delimited list of the required form fields
 				//form is valid, perform update
-				$sql = "update " . DB_PREFIX . "users ";
-				$sql .= "set firstname = '" . $firstname . "', lastname = '" . $lastname . "', email = '" . $email . "', userName = '" . $userName . "' ";
-				$sql .= "where userID = " . $userID . ";";
-				$mysqli->query($sql) or die('error updating user');
+				if ($userService) {
+					$userService->adminUpdateUser($userID, $firstname, $lastname, $email, $userName);
+					$display = '<div class="responseOk">User ' . $userName . ' Updated</div><br/>';
+				} else {
+					$sql = "update " . DB_PREFIX . "users ";
+					$sql .= "set firstname = '" . $firstname . "', lastname = '" . $lastname . "', email = '" . $email . "', userName = '" . $userName . "' ";
+					$sql .= "where userID = " . $userID . ";";
+					$mysqli->query($sql) or die('error updating user');
 
-				$display = '<div class="responseOk">User ' . $userName . ' Updated</div><br/>';
+					$display = '<div class="responseOk">User ' . $userName . ' Updated</div><br/>';
+				}
 				/*
 				if ($_POST['password'] == $_POST['password2']) {
 				} else {
@@ -79,12 +94,16 @@ switch ($action) {
 		$action = 'edit';
 		break;
 	case 'delete':
-		$sql = "delete from " . DB_PREFIX . "users where userID = " . (int)$_GET['id'];
-		$mysqli->query($sql) or die('error deleting user: ' . $sql);
-		$sql = "delete from " . DB_PREFIX . "picks where userID = " . (int)$_GET['id'];
-		$mysqli->query($sql) or die('error deleting user picks: ' . $sql);
-		$sql = "delete from " . DB_PREFIX . "picksummary where userID = " . (int)$_GET['id'];
-		$mysqli->query($sql) or die('error deleting user picks summary: ' . $sql);
+		if ($userService) {
+			$userService->adminDeleteUser($_GET['id']);
+		} else {
+			$sql = "delete from " . DB_PREFIX . "users where userID = " . (int)$_GET['id'];
+			$mysqli->query($sql) or die('error deleting user: ' . $sql);
+			$sql = "delete from " . DB_PREFIX . "picks where userID = " . (int)$_GET['id'];
+			$mysqli->query($sql) or die('error deleting user picks: ' . $sql);
+			$sql = "delete from " . DB_PREFIX . "picksummary where userID = " . (int)$_GET['id'];
+			$mysqli->query($sql) or die('error deleting user picks summary: ' . $sql);
+		}
 		header('Location: ' . $_SERVER['PHP_SELF']);
 		exit;
 		break;
@@ -98,17 +117,30 @@ include('includes/header.php');
 if ($action == 'add' || $action == 'edit') {
 	//display add/edit screen
 	if ($action == 'edit' && sizeof($_POST) == 0) {
-		$sql = "select * from " . DB_PREFIX . "users where userID = " . $userID;
-		$query = $mysqli->query($sql);
-		if ($query->num_rows > 0) {
-			$row = $query->fetch_assoc();
-			$firstname = $row['firstname'];
-			$lastname = $row['lastname'];
-			$email = $row['email'];
-			$userName = $row['userName'];
+		if ($userService) {
+			$row = $userService->adminGetUser($userID);
+			if (!empty($row)) {
+				$firstname = $row['firstname'];
+				$lastname = $row['lastname'];
+				$email = $row['email'];
+				$userName = $row['userName'];
+			} else {
+				header('Location: ' . $_SERVER['PHP_SELF']);
+				exit;
+			}
 		} else {
-			header('Location: ' . $_SERVER['PHP_SELF']);
-			exit;
+			$sql = "select * from " . DB_PREFIX . "users where userID = " . $userID;
+			$query = $mysqli->query($sql);
+			if ($query->num_rows > 0) {
+				$row = $query->fetch_assoc();
+				$firstname = $row['firstname'];
+				$lastname = $row['lastname'];
+				$email = $row['email'];
+				$userName = $row['userName'];
+			} else {
+				header('Location: ' . $_SERVER['PHP_SELF']);
+				exit;
+			}
 		}
 	}
 ?>
@@ -150,13 +182,21 @@ if ($action == 'add' || $action == 'edit') {
 <p><a href="<?php echo $_SERVER['PHP_SELF']; ?>?action=add&week=<?php echo $week; ?>"><img src="images/icons/add_16x16.png" width="16" height="16" alt="Add Game" /></a>&nbsp;<a href="<?php echo $_SERVER['PHP_SELF']; ?>?action=add">Add User</a></p>
 <div class="table-responsive">
 <?php
-	$sql = "select * from " . DB_PREFIX . "users order by lastname, firstname";
-	$query = $mysqli->query($sql);
-	if ($query->num_rows > 0) {
+	$rows = $userService ? $userService->adminListUsers() : null;
+	if ($rows === null) {
+		$sql = "select * from " . DB_PREFIX . "users order by lastname, firstname";
+		$query = $mysqli->query($sql);
+		if ($query->num_rows > 0) {
+			while ($row = $query->fetch_assoc()) {
+				$rows[] = $row;
+			}
+		}
+	}
+	if (!empty($rows)) {
 		echo '<table class="table table-striped">' . "\n";
 		echo '	<tr><th align="left">Username</th><th align="left">Name</th><th align="left">Email</th><th>Status</th><th>&nbsp;</th></tr>' . "\n";
 		$i = 0;
-		while ($row = $query->fetch_assoc()) {
+		foreach ($rows as $row) {
 			$rowclass = (($i % 2 == 0) ? ' class="altrow"' : '');
 			echo '		<tr' . $rowclass . '>' . "\n";
 			echo '			<td>' . $row['userName'] . '</td>' . "\n";

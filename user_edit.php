@@ -10,12 +10,17 @@ if (isset($_POST['submit'])) {
 
 		if ($my_form->validate_fields('firstname,lastname,email,password')) { // comma delimited list of the required form fields
 			if ($_POST['password'] == $_POST['password2']) {
-				$secure_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-				$sql = "update " . DB_PREFIX . "users ";
-				$sql .= "set password = '".$secure_password."', salt = '', firstname = '".$_POST['firstname']."', lastname = '".$_POST['lastname']."', email = '".$_POST['email']."' ";
-				$sql .= "where userID = " . $user->userID . ";";
-				//die($sql);
-				$mysqli->query($sql) or die($mysqli->error);
+				if (class_exists('App\\Auth\\UserService')) {
+					$userService = new \App\Auth\UserService();
+					$userService->updateUserProfile($user->userID, $_POST['firstname'], $_POST['lastname'], $_POST['email'], $_POST['password']);
+				} else {
+					$secure_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+					$sql = "update " . DB_PREFIX . "users ";
+					$sql .= "set password = '".$secure_password."', salt = '', firstname = '".$_POST['firstname']."', lastname = '".$_POST['lastname']."', email = '".$_POST['email']."' ";
+					$sql .= "where userID = " . $user->userID . ";";
+					//die($sql);
+					$mysqli->query($sql) or die($mysqli->error);
+				}
 
 				//set confirmation message
 				$display = '<div class="responseOk">Account updated successfully.</div><br/>';
