@@ -1,13 +1,40 @@
 <?php
 //modify vars below
 // Database
-define('DB_HOSTNAME', 'localhost');
-define('DB_USERNAME', 'dbuser');
-define('DB_PASSWORD', 'dbpass');
-define('DB_DATABASE', 'nflpickem');
-define('DB_PREFIX', 'nflp_');
+$envFile = __DIR__ . '/../.env';
+if (is_readable($envFile)) {
+	$lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+	foreach ($lines as $line) {
+		$line = trim($line);
+		if ($line === '' || strpos($line, '#') === 0) {
+			continue;
+		}
+		$parts = explode('=', $line, 2);
+		if (count($parts) !== 2) {
+			continue;
+		}
+		$key = trim($parts[0]);
+		$value = trim($parts[1]);
+		$quote = substr($value, 0, 1);
+		if (($quote === '"' || $quote === "'") && substr($value, -1) === $quote) {
+			$value = substr($value, 1, -1);
+		}
+		if ($key !== '' && getenv($key) === false) {
+			putenv($key . '=' . $value);
+			$_ENV[$key] = $value;
+		}
+	}
+}
 
-define('SITE_URL', 'http://localhost/personal/applications/phppickem/');
+define('DB_HOSTNAME', getenv('DB_HOSTNAME') !== false ? getenv('DB_HOSTNAME') : 'localhost');
+define('DB_USERNAME', getenv('DB_USERNAME') !== false ? getenv('DB_USERNAME') : 'dbuser');
+define('DB_PASSWORD', getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : 'dbpass');
+define('DB_DATABASE', getenv('DB_DATABASE') !== false ? getenv('DB_DATABASE') : 'nflpickem');
+define('DB_PREFIX', getenv('DB_PREFIX') !== false ? getenv('DB_PREFIX') : 'nflp_');
+$dbPort = getenv('DB_PORT');
+define('DB_PORT', ($dbPort !== false && $dbPort !== '') ? (int)$dbPort : 3306);
+
+define('SITE_URL', getenv('SITE_URL') !== false ? getenv('SITE_URL') : 'http://localhost/personal/applications/phppickem/');
 define('ALLOW_SIGNUP', true);
 define('SHOW_SIGNUP_LINK', true);
 define('USER_NAMES_DISPLAY', 3); // 1 = real names, 2 = usernames, 3 = usernames w/ real names on hover

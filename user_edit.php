@@ -10,10 +10,9 @@ if (isset($_POST['submit'])) {
 
 		if ($my_form->validate_fields('firstname,lastname,email,password')) { // comma delimited list of the required form fields
 			if ($_POST['password'] == $_POST['password2']) {
-				$salt = substr($crypto->encrypt((uniqid(mt_rand(), true))), 0, 10);
-				$secure_password = $crypto->encrypt($salt . $crypto->encrypt($_POST['password']));
+				$secure_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 				$sql = "update " . DB_PREFIX . "users ";
-				$sql .= "set password = '".$secure_password."', salt = '".$salt."', firstname = '".$_POST['firstname']."', lastname = '".$_POST['lastname']."', email = '".$_POST['email']."' ";
+				$sql .= "set password = '".$secure_password."', salt = '', firstname = '".$_POST['firstname']."', lastname = '".$_POST['lastname']."', email = '".$_POST['email']."' ";
 				$sql .= "where userID = " . $user->userID . ";";
 				//die($sql);
 				$mysqli->query($sql) or die($mysqli->error);

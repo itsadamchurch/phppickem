@@ -22,6 +22,29 @@ PHP Pick 'Em is a free php web application that allows you to host a weekly NFL 
 4. Upload files to your web server
 5. Run installer script at http://www.your-domain.com/phppickem/install.  The installer will assist you with the rest.
 
+## Docker (local dev)
+
+One-command bring up + install (auto-seeds the DB from `install/install.sql`):
+
+```
+cp .env.example .env && docker compose up --build -d
+```
+
+Then open `http://localhost:8080/` in your browser. Default login is `admin / admin123`.
+
+To stop:
+
+```
+docker compose down
+```
+
+## Password hashing (migration)
+
+Passwords now use `password_hash()` / `password_verify()` in modern PHP. Existing legacy hashes still work:
+
+- On successful login with a legacy hash, the password is re-hashed with `password_hash()` and saved.
+- The `salt` column remains but is set to an empty string for new/updated users (no schema change required).
+
 ## Logging In
 
 Log in for the first time with admin / admin123.  You may change your password once you are logged in.
