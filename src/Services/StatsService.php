@@ -27,6 +27,10 @@ class StatsService {
 	public function getCutoffDateTime($week) {
 		//get the cutoff date for a given week
 		global $mysqli;
+		$week = (int)$week;
+		if ($week <= 0) {
+			die('Error getting cutoff date: invalid week');
+		}
 		$sql = "select gameTimeEastern from " . DB_PREFIX . "schedule where weekNum = " . $week . " and DATE_FORMAT(gameTimeEastern, '%W') = 'Sunday' order by gameTimeEastern limit 1;";
 		$query = $mysqli->query($sql);
 		if ($query->num_rows > 0) {

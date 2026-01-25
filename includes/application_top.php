@@ -92,10 +92,17 @@ if ($_SESSION['loggedInUser'] === 'admin' && $_SESSION['logged'] === 'yes') {
 	//$isAdmin = 0;
 	//get current week
 	$currentWeek = $statsService->getCurrentWeek();
+	if (empty($currentWeek)) {
+		$warnings[] = 'Schedule is empty or not loaded. Run buildSchedule.php to import.';
+		$cutoffDateTime = null;
+		$firstGameTime = null;
+		$firstGameExpired = false;
+		$weekExpired = false;
+	} else {
+		$cutoffDateTime = $statsService->getCutoffDateTime($currentWeek);
+		$firstGameTime = $statsService->getFirstGameTime($currentWeek);
 
-	$cutoffDateTime = $statsService->getCutoffDateTime($currentWeek);
-	$firstGameTime = $statsService->getFirstGameTime($currentWeek);
-
-	$firstGameExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($firstGameTime)) ? true : false);
-	$weekExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($cutoffDateTime)) ? true : false);
+		$firstGameExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($firstGameTime)) ? true : false);
+		$weekExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($cutoffDateTime)) ? true : false);
+	}
 }
