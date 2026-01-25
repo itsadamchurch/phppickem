@@ -1,10 +1,10 @@
 <?php
 require('includes/application_top.php');
 
-$weekStats = array();
-$playerTotals = array();
-$possibleScoreTotal = 0;
-calculateStats();
+$stats = $statsService->calculateStats();
+$weekStats = $stats['weekStats'];
+$playerTotals = $stats['playerTotals'];
+$possibleScoreTotal = $stats['possibleScoreTotal'];
 
 include('includes/header.php');
 ?>
@@ -120,7 +120,7 @@ if (isset($weekStats)) {
 				<tr><th align="left">Player</th><th align="left">Wins</th><th>Pick Ratio</th></tr>
 			<?php
 			if (isset($playerTotals)) {
-				$playerTotals = sort2d($playerTotals, 'score', 'desc');
+				$playerTotals = $statsService->sort2d($playerTotals, 'score', 'desc');
 				$i = 0;
 				foreach($playerTotals as $playerID => $stats) {
 					$rowclass = (($i % 2 == 0) ? ' class="altrow"' : '');

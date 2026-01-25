@@ -4,7 +4,7 @@ require('includes/classes/team.php');
 
 if ($_POST['action'] == 'Submit') {
 	$week = $_POST['week'];
-	$cutoffDateTime = getCutoffDateTime($week);
+	$cutoffDateTime = $statsService->getCutoffDateTime($week);
 
 	//update summary table
 	$sql = "delete from " . DB_PREFIX . "picksummary where weekNum = " . $_POST['week'] . " and userID = " . $user->userID . ";";
@@ -33,10 +33,10 @@ if ($_POST['action'] == 'Submit') {
 	$week = (int)$_GET['week'];
 	if (empty($week)) {
 		//get current week
-		$week = (int)getCurrentWeek();
+		$week = (int)$statsService->getCurrentWeek();
 	}
-	$cutoffDateTime = getCutoffDateTime($week);
-	$firstGameTime = getFirstGameTime($week);
+	$cutoffDateTime = $statsService->getCutoffDateTime($week);
+	$firstGameTime = $statsService->getFirstGameTime($week);
 }
 
 include('includes/header.php');
@@ -125,7 +125,7 @@ include('includes/column_right.php');
 				<p>Please make your picks below for each game.</p>
 	<?php
 	//get existing picks
-	$picks = getUserPicks($week, $user->userID);
+	$picks = $statsService->getUserPicks($week, $user->userID);
 
 	//get show picks status
 	$sql = "select * from " . DB_PREFIX . "picksummary where weekNum = " . $week . " and userID = " . $user->userID . ";";
@@ -207,22 +207,22 @@ include('includes/column_right.php');
 			echo '					<div class="row bg-row3">'."\n";
 			echo '						<div class="col-xs-6 center">'."\n";
 			echo '							<div class="team">' . $visitorTeam->city . ' ' . $visitorTeam->team . '</div>'."\n";
-			$teamRecord = trim(getTeamRecord($visitorTeam->teamID));
+			$teamRecord = trim($statsService->getTeamRecord($visitorTeam->teamID));
 			if (!empty($teamRecord)) {
 				echo '							<div class="record">Record: ' . $teamRecord . '</div>'."\n";
 			}
-			$teamStreak = trim(getTeamStreak($visitorTeam->teamID));
+			$teamStreak = trim($statsService->getTeamStreak($visitorTeam->teamID));
 			if (!empty($teamStreak)) {
 				echo '							<div class="streak">Streak: ' . $teamStreak . '</div>'."\n";
 			}
 			echo '						</div>'."\n";
 			echo '						<div class="col-xs-6 center">' . "\n";
 			echo '							<div class="team">' . $homeTeam->city . ' ' . $homeTeam->team . '</div>'."\n";
-			$teamRecord = trim(getTeamRecord($homeTeam->teamID));
+			$teamRecord = trim($statsService->getTeamRecord($homeTeam->teamID));
 			if (!empty($teamRecord)) {
 				echo '							<div class="record">Record: ' . $teamRecord . '</div>'."\n";
 			}
-			$teamStreak = trim(getTeamStreak($homeTeam->teamID));
+			$teamStreak = trim($statsService->getTeamStreak($homeTeam->teamID));
 			if (!empty($teamStreak)) {
 				echo '							<div class="streak">Streak: ' . $teamStreak . '</div>'."\n";
 			}
@@ -231,7 +231,7 @@ include('includes/column_right.php');
 			if ($row['expired']) {
 				//else show locked pick
 				echo '					<div class="row bg-row4">'."\n";
-				$pickID = getPickID($row['gameID'], $user->userID);
+				$pickID = $statsService->getPickID($row['gameID'], $user->userID);
 				if (!empty($pickID)) {
 					$statusImg = '';
 					$pickTeam = new team($pickID);

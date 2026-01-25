@@ -7,7 +7,7 @@ if (empty($team)) {
 	$week = $_GET['week'];
 
 	//get current week
-	$currentWeek = getCurrentWeek();
+	$currentWeek = $statsService->getCurrentWeek();
 	if (empty($week)) $week = $currentWeek;
 }
 

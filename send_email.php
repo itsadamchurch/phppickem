@@ -7,14 +7,14 @@ if (!$user->is_admin) {
 }
 
 //get vars
-$week = (int)getCurrentWeek();
+$week = (int)$statsService->getCurrentWeek();
 $prevWeek = $week - 1;
-$firstGameTime = getFirstGameTime($week);
+$firstGameTime = $statsService->getFirstGameTime($week);
 
-$weekStats = array();
-$playerTotals = array();
-$possibleScoreTotal = 0;
-calculateStats();
+$stats = $statsService->calculateStats();
+$weekStats = $stats['weekStats'];
+$playerTotals = $stats['playerTotals'];
+$possibleScoreTotal = $stats['possibleScoreTotal'];
 
 $winners = '';
 if (sizeof($weekStats) > 0) {
@@ -64,7 +64,7 @@ $tmpScore = 0;
 $i = 1;
 if (isset($playerTotals)) {
 	//show top 3 pick ratios
-	$playerTotals = sort2d($playerTotals, 'score', 'desc');
+	$playerTotals = $statsService->sort2d($playerTotals, 'score', 'desc');
 	foreach($playerTotals as $playerID => $stats) {
 		if ($tmpScore < $stats[score]) $tmpScore = $stats[score]; //set initial top score
 		//if next lowest score is reached, increase counter
@@ -99,13 +99,13 @@ if ($_POST['action'] == 'Select' && isset($_POST['cannedMsg'])) {
 
 	//replace variables
 	$template_vars = array('{week}', '{first_game}', '{site_url}', '{rules_url}', '{winners}', '{previousWeek}', '{winningScore}', '{possibleScore}', '{currentLeaders}', '{bestPickRatios}');
-	$replacement_values = array($week, date('l F j, g:i a', strtotime($firstGameTime)), SITE_URL, SITE_URL . 'rules.php', $winners, $prevWeek, $weekStats[$prevWeek][highestScore], getGameTotal($prevWeek), $currentLeaders, $bestPickRatios);
+	$replacement_values = array($week, date('l F j, g:i a', strtotime($firstGameTime)), SITE_URL, SITE_URL . 'rules.php', $winners, $prevWeek, $weekStats[$prevWeek][highestScore], $statsService->getGameTotal($prevWeek), $currentLeaders, $bestPickRatios);
 	$subject = stripslashes(str_replace($template_vars, $replacement_values, $subjectTemplate));
 	$message = stripslashes(str_replace($template_vars, $replacement_values, $messageTemplate));
 }
 
 if ($_POST['action'] == 'Send Message') {
-	$totalGames = getGameTotal($week);
+	$totalGames = $statsService->getGameTotal($week);
 	//get users to send message to
 	if ($_POST['cannedMsg'] == 'WEEKLY_PICKS_REMINDER') {
 		//select only users missing picks for the current week
@@ -195,7 +195,7 @@ var message = new richTextEditor('message');
 <?php
 //format content for preloading
 if (!empty($message)) {
-	$message = rteSafe($message);
+	$message = $statsService->rteSafe($message);
 }
 ?>
 message.html = '<?php echo $message; ?>';

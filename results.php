@@ -4,10 +4,10 @@ require('includes/application_top.php');
 $week = (int)$_GET['week'];
 if (empty($week)) {
 	//get current week
-	$week = (int)getCurrentWeek();
+	$week = (int)$statsService->getCurrentWeek();
 }
 
-$cutoffDateTime = getCutoffDateTime($week);
+$cutoffDateTime = $statsService->getCutoffDateTime($week);
 $weekExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($cutoffDateTime)) ? 1 : 0);
 
 include('includes/header.php');
@@ -103,7 +103,7 @@ if (!$allScoresIn) {
 	echo '<p style="font-weight: bold; color: #DBA400;">* Not all scores have been updated for week ' . $week . ' yet.</p>' . "\n";
 }
 
-$hideMyPicks = hidePicks($user->userID, $week);
+$hideMyPicks = $statsService->hidePicks($user->userID, $week);
 if ($hideMyPicks && !$weekExpired) {
 	echo '<p style="font-weight: bold; color: green;">* Your picks are currently hidden to other users.</p>' . "\n";
 }
@@ -120,7 +120,7 @@ if (sizeof($playerTotals) > 0) {
 	$i = 0;
 	arsort($playerTotals);
 	foreach($playerTotals as $userID => $totalCorrect) {
-		$hidePicks = hidePicks($userID, $week);
+		$hidePicks = $statsService->hidePicks($userID, $week);
 		if ($i == 0) {
 			$topScore = $totalCorrect;
 			$winners[] = $userID;
@@ -153,7 +153,7 @@ if (sizeof($playerTotals) > 0) {
 				}
 			} else {
 				//mask pick if pick and week is not locked and user has opted to hide their picks
-				$gameIsLocked = gameIsLocked($game['gameID']);
+				$gameIsLocked = $statsService->gameIsLocked($game['gameID']);
 				if (!$gameIsLocked && !$weekExpired && $hidePicks && (int)$userID !== (int)$user->userID) {
 					$pick = '***';
 				}

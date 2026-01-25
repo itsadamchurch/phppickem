@@ -46,10 +46,10 @@
 		<!-- end countdown code -->
 
 <?php
-$weekStats = array();
-$playerTotals = array();
-$possibleScoreTotal = 0;
-calculateStats();
+$stats = $statsService->calculateStats();
+$weekStats = $stats['weekStats'];
+$playerTotals = $stats['playerTotals'];
+$possibleScoreTotal = $stats['possibleScoreTotal'];
 
 $tmpWins = 0;
 $i = 1;
@@ -76,7 +76,7 @@ if (is_array($playerTotals) && sizeof($playerTotals) > 0) {
 	//show top 3 pick ratios
 	echo '		<div class="bg-success">' . "\n";
 	echo '			<b>Current Leaders (pick %):</b><br />' . "\n";
-	$playerTotals = sort2d($playerTotals, 'score', 'desc');
+	$playerTotals = $statsService->sort2d($playerTotals, 'score', 'desc');
 	foreach($playerTotals as $playerID => $stats) {
 		if ($tmpScore < $stats[score]) $tmpScore = $stats[score]; //set initial top score
 		//if next lowest score is reached, increase counter

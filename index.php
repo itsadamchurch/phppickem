@@ -19,8 +19,8 @@ if ($user->userName == 'admin') {
 		echo '	<div class="bg-warning">The current week is locked.  <a href="results.php">Check the Results &gt;&gt;</a></div>' . "\n";
 	} else {
 		//if all picks not submitted yet for current week
-		$picks = getUserPicks($currentWeek, $user->userID);
-		$gameTotal = getGameTotal($currentWeek);
+		$picks = $statsService->getUserPicks($currentWeek, $user->userID);
+		$gameTotal = $statsService->getGameTotal($currentWeek);
 		if (sizeof($picks) < $gameTotal) {
 			echo '	<div class="bg-warning">You have NOT yet made all of your picks for week ' . $currentWeek . '.  <a href="entry_form.php">Make Your Picks &gt;&gt;</a></div>' . "\n";
 		}
@@ -36,7 +36,7 @@ include('includes/column_right.php');
 		<div id="content" class="col-md-8 col-xs-12">
 			<h3>Your Picks At A Glance:</h3>
 	<?php
-	$lastCompletedWeek = getLastCompletedWeek();
+	$lastCompletedWeek = $statsService->getLastCompletedWeek();
 
 	$sql = "select s.weekNum, count(s.gameID) as gamesTotal,";
 	$sql .= " min(s.gameTimeEastern) as firstGameTime,";
@@ -59,9 +59,9 @@ include('includes/column_right.php');
 			//if week is expired, show score (if scores are entered)
 			if ($lastCompletedWeek >= (int)$row['weekNum']) {
 				//scores entered, show score
-				$weekTotal = getGameTotal($row['weekNum']);
+				$weekTotal = $statsService->getGameTotal($row['weekNum']);
 				//get player score
-				$userScore = getUserScore($row['weekNum'], $user->userID);
+				$userScore = $statsService->getUserScore($row['weekNum'], $user->userID);
 				echo '			<div class="bg-info"><b>Score: ' . $userScore . '/' . $weekTotal . ' (' . number_format(($userScore / $weekTotal) * 100, 2) . '%)</b><br /><a href="results.php?week='.$row['weekNum'].'">See Results &raquo;</a></div>' . "\n";
 			} else {
 				//scores not entered, show ???
@@ -69,7 +69,7 @@ include('includes/column_right.php');
 			}
 		} else {
 			//week is not expired yet, check to see if all picks have been entered
-			$picks = getUserPicks($row['weekNum'], $user->userID);
+			$picks = $statsService->getUserPicks($row['weekNum'], $user->userID);
 			if (sizeof($picks) < (int)$row['gamesTotal']) {
 				//not all picks were entered
 				$tmpStyle = '';

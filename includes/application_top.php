@@ -1,7 +1,6 @@
 <?php
 // application_top.php -- included first on all pages
 require('includes/config.php');
-require('includes/functions.php');
 require('includes/classes/class.phpmailer.php');
 require('includes/htmlpurifier/HTMLPurifier.auto.php');
 
@@ -12,6 +11,13 @@ if (is_readable($autoloadPath)) {
 
 if (session_status() === PHP_SESSION_NONE) {
 	session_start();
+}
+
+if (!class_exists('App\\Services\\StatsService') && is_readable(__DIR__ . '/../src/Services/StatsService.php')) {
+	require_once __DIR__ . '/../src/Services/StatsService.php';
+}
+if (class_exists('App\\Services\\StatsService')) {
+	$statsService = new \App\Services\StatsService();
 }
 
 $purifier_config = HTMLPurifier_Config::createDefault();
@@ -85,10 +91,10 @@ if ($_SESSION['loggedInUser'] === 'admin' && $_SESSION['logged'] === 'yes') {
 } else {
 	//$isAdmin = 0;
 	//get current week
-	$currentWeek = getCurrentWeek();
+	$currentWeek = $statsService->getCurrentWeek();
 
-	$cutoffDateTime = getCutoffDateTime($currentWeek);
-	$firstGameTime = getFirstGameTime($currentWeek);
+	$cutoffDateTime = $statsService->getCutoffDateTime($currentWeek);
+	$firstGameTime = $statsService->getFirstGameTime($currentWeek);
 
 	$firstGameExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($firstGameTime)) ? true : false);
 	$weekExpired = ((date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($cutoffDateTime)) ? true : false);

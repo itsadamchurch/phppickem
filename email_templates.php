@@ -70,7 +70,7 @@ include('includes/header.php');
 <?php
 //format content for preloading
 if (!empty($message)) {
-	$message = rteSafe($message);
+	$message = $statsService->rteSafe($message);
 }
 ?>
 		message.html = '<?php echo $message; ?>';

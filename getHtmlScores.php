@@ -23,7 +23,7 @@ foreach ($games['gms']['g'] as $gameArray) {
 		$home_score = (int)$game['hs'];
 
 		$winner = ($away_score > $home_score) ? $away_team : $home_team;
-		$gameID = getGameIDByTeamID($week, $home_team);
+		$gameID = $statsService->getGameIDByTeamID($week, $home_team);
 		if (is_numeric(strip_tags($home_score)) && is_numeric(strip_tags($away_score))) {
 			if ($away_score > 0 || $home_score > 0) {
 				$scores[] = array(

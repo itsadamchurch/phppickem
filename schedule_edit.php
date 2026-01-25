@@ -72,7 +72,7 @@ if ($action == 'add' || $action == 'edit') {
 	if ($action =='add') {
 		$week = $_GET['week'];
 		if (empty($week)) {
-			$week = getCurrentWeek();
+			$week = $statsService->getCurrentWeek();
 		}
 	} else if ($action == 'edit') {
 		$sql = "select * from " . DB_PREFIX . "schedule where gameID = " . (int)$_GET['id'];
@@ -171,7 +171,7 @@ $query->free;
 	//display listing
 	$week = $_GET['week'];
 	if (empty($week)) {
-		$week = getCurrentWeek();
+		$week = $statsService->getCurrentWeek();
 	}
 ?>
 <h1>Edit Schedule</h1>

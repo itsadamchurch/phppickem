@@ -24,7 +24,7 @@ if ($_POST['action'] == 'Update') {
 $week = (int)$_GET['week'];
 if (empty($week)) {
 	//get current week
-	$week = (int)getCurrentWeek();
+	$week = (int)$statsService->getCurrentWeek();
 }
 
 include('includes/header.php');
