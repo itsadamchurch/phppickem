@@ -38,6 +38,28 @@ To stop:
 docker compose down
 ```
 
+## Playoffs (import + picks)
+
+Import playoff schedule into the DB (2025, regular postseason rounds):
+
+```
+http://localhost:8080/buildPlayoffs.php?year=2025&apply=1
+```
+
+If ESPN has not published the playoff schedule yet, the import may return 0 games. Re-run the command once the bracket is released.
+
+Playoff picks entry:
+
+```
+http://localhost:8080/playoff_entry.php
+```
+
+Playoff results:
+
+```
+http://localhost:8080/results.php?type=playoffs&round=1
+```
+
 ## Composer (autoloading)
 
 If you want Composer autoloading (PSR-4):

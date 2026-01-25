@@ -113,6 +113,39 @@ CREATE TABLE `nflp_schedule` (
 ) ENGINE=MyISAM AUTO_INCREMENT=257 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
+--  Table structure for `nflp_playoff_schedule`
+-- ----------------------------
+DROP TABLE IF EXISTS `nflp_playoff_schedule`;
+CREATE TABLE `nflp_playoff_schedule` (
+  `playoffGameID` int(11) NOT NULL AUTO_INCREMENT,
+  `roundNum` int(11) NOT NULL,
+  `gameTimeEastern` datetime DEFAULT NULL,
+  `homeID` varchar(10) NOT NULL,
+  `homeScore` int(11) DEFAULT NULL,
+  `visitorID` varchar(10) NOT NULL,
+  `visitorScore` int(11) DEFAULT NULL,
+  `overtime` tinyint(1) NOT NULL DEFAULT '0',
+  `is_bye` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`playoffGameID`),
+  KEY `PlayoffGameID` (`playoffGameID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+-- ----------------------------
+--  Table structure for `nflp_playoff_picks`
+-- ----------------------------
+DROP TABLE IF EXISTS `nflp_playoff_picks`;
+CREATE TABLE `nflp_playoff_picks` (
+  `pickID` int(11) NOT NULL AUTO_INCREMENT,
+  `userID` int(11) NOT NULL,
+  `gameID` int(11) NOT NULL,
+  `pickTeamID` varchar(10) NOT NULL,
+  `points` int(11) DEFAULT '0',
+  PRIMARY KEY (`pickID`),
+  KEY `UserID` (`userID`),
+  KEY `GameID` (`gameID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+-- ----------------------------
 --  Records of `nflp_schedule`
 -- ----------------------------
 BEGIN;

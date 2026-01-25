@@ -47,6 +47,7 @@ header('X-UA-Compatible:IE=Edge,chrome=1'); //IE8 respects this but not the meta
 								<li<?php echo (($activeTab == 'home') ? ' class="active"' : ''); ?>><a href="./">Home</a></li>
 								<?php if ($user->userName !== 'admin') { ?>
 								<li><a href="entry_form.php<?php echo ((!empty($_GET['week'])) ? '?week=' . (int)$_GET['week'] : ''); ?>">Entry Form</a></li>
+								<li<?php echo (($activeTab == 'playoffs') ? ' class="active"' : ''); ?>><a href="entry_form.php?type=playoffs">Playoff Picks</a></li>
 								<?php } ?>
 								<li><a href="results.php<?php echo ((!empty($_GET['week'])) ? '?week=' . (int)$_GET['week'] : ''); ?>">Results</a></li>
 								<li><a href="standings.php">Standings</a></li>
