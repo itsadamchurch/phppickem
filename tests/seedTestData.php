@@ -1,11 +1,11 @@
 <?php
-require('includes/application_top.php');
+require(__DIR__ . '/../includes/application_top.php');
 
 // Usage (CLI):
-// php seedTestData.php --apply=1
+// php tests/seedTestData.php --apply=1
 // Optional: --playoffs=1 to seed playoff picks too
 // Browser:
-// seedTestData.php?apply=1
+// tests/seedTestData.php?apply=1
 
 $args = array();
 if (PHP_SAPI === 'cli') {

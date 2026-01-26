@@ -68,6 +68,26 @@ Playoff results:
 http://localhost:8080/results.php?type=playoffs&round=1
 ```
 
+## Test data (seed + cleanup)
+
+Seed 3 test users (Bob Loblaw, Sal Goodman, Howie Dewitt) and picks for the full regular season:
+
+```
+php tests/seedTestData.php --apply=1
+```
+
+Optional: include playoff picks too:
+
+```
+php tests/seedTestData.php --apply=1 --playoffs=1
+```
+
+Cleanup test users and all their picks (regular + playoffs):
+
+```
+php tests/cleanupTestData.php --apply=1
+```
+
 ## Composer (autoloading)
 
 If you want Composer autoloading (PSR-4):
