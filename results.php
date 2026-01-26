@@ -19,7 +19,7 @@ if ($type === 'playoffs') {
 			$row = $query->fetch_assoc();
 			$round = (int)$row['roundNum'];
 		}
-		$query->free;
+		$query->free();
 	}
 	$week = $round;
 	$cutoffDateTime = null;
@@ -31,7 +31,7 @@ if ($type === 'playoffs') {
 		$cutoffDateTime = $row['firstGameTime'];
 		$lastGameTime = $row['lastGameTime'];
 	}
-	$query->free;
+	$query->free();
 	$weekExpired = (!empty($lastGameTime) && (date("U", time()+(SERVER_TIMEZONE_OFFSET * 3600)) > strtotime($lastGameTime))) ? 1 : 0;
 } else {
 	if (empty($week)) {
@@ -79,7 +79,7 @@ while ($row = $query->fetch_assoc()) {
 	}
 	$i++;
 }
-$query->free;
+$query->free();
 $weekNav .= '</div>' . "\n";
 echo $weekNav;
 
@@ -149,7 +149,7 @@ while ($row = $query->fetch_assoc()) {
 	}
 	$i++;
 }
-$query->free;
+$query->free();
 ?>
 <script type="text/javascript">
 $(document).ready(function(){
@@ -296,7 +296,7 @@ if (sizeof($playerTotals) > 0) {
 		}
 		echo $absentHtml;
 	}
-	$query->free;
+	$query->free();
 }
 
 include('includes/comments.php');

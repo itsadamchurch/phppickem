@@ -36,7 +36,7 @@ if ($weekFilter > 0) {
 	while ($row = $query->fetch_assoc()) {
 		$weeks[] = (int)$row['weekNum'];
 	}
-	$query->free;
+	$query->free();
 }
 
 $updates = 0;

@@ -34,7 +34,7 @@ class team {
 		} else {
 			return false;
 		}
-		$query->free;
+		$query->free();
 	}
 
 }

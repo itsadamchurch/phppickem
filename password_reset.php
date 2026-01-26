@@ -55,7 +55,7 @@ if (is_array($_POST) && sizeof($_POST) > 0) {
 		} else {
 			$display = '<div class="responseError">No account matched, please try again.</div><br/>';
 		}
-		$query->free;
+		$query->free();
 	}
 }
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

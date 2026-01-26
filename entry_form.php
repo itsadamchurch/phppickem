@@ -28,7 +28,7 @@ if ($_POST['action'] == 'Submit') {
 				}
 			}
 		}
-		$query->free;
+		$query->free();
 		header('Location: results.php?type=playoffs&round=' . $round);
 		exit;
 	}
@@ -55,7 +55,7 @@ if ($_POST['action'] == 'Submit') {
 			}
 		}
 	}
-	$query->free;
+	$query->free();
 	header('Location: results.php?week=' . $_POST['week']);
 	exit;
 } else {
@@ -83,7 +83,7 @@ if ($_POST['action'] == 'Submit') {
 					$round = (int)$row['roundNum'];
 				}
 			}
-			$query->free;
+			$query->free();
 		}
 	} else {
 		$week = (int)$_GET['week'];
@@ -176,7 +176,7 @@ if ($type === 'playoffs') {
 		}
 		$i++;
 	}
-	$query->free;
+	$query->free();
 	$weekNav .= '	</div>' . "\n";
 } else {
 	$weekNav .= '	<div class="navbar3 col-xs-12"><b>Go to week:</b> ';
@@ -194,7 +194,7 @@ if ($type === 'playoffs') {
 			$i++;
 		}
 	}
-	$query->free;
+	$query->free();
 	$weekNav .= '	</div>' . "\n";
 }
 $weekNav .= '</div>' . "\n";
@@ -230,7 +230,7 @@ include('includes/column_right.php');
 		while ($row = $query->fetch_assoc()) {
 			$picks[$row['gameID']] = $row['pickTeamID'];
 		}
-		$query->free;
+		$query->free();
 	} else {
 		$picks = $statsService->getUserPicks($week, $user->userID);
 	}
@@ -245,7 +245,7 @@ include('includes/column_right.php');
 		} else {
 			$showPicks = 1;
 		}
-		$query->free;
+		$query->free();
 	}
 
 	//display schedule for week

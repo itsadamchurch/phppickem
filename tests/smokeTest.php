@@ -216,6 +216,27 @@ foreach ($adminPages as $adminPage) {
 	}
 }
 
+// Ensure non-admin cannot access update forms
+$resp = request('GET', $base . '/scores.php', null, $nonAdminCookies);
+assertNotContains('non-admin scores form', $resp, 'scoresForm', $failures);
+$postResp = request('POST', $base . '/scores.php', array(
+	'action' => 'Update',
+	'week' => '1',
+	'game' => array()
+), $nonAdminCookies);
+assertNotContains('non-admin scores post', $postResp, 'Enter Scores', $failures);
+$resp = request('GET', $base . '/schedule_edit.php', null, $nonAdminCookies);
+assertNotContains('non-admin schedule form', $resp, 'addeditgame', $failures);
+$postResp = request('POST', $base . '/schedule_edit.php?action=add_action', array(
+	'weekNum' => '1',
+	'gameTimeEastern' => '2025-09-01 13:00:00',
+	'homeID' => 'NE',
+	'visitorID' => 'NYJ',
+	'homeScore' => '0',
+	'visitorScore' => '0'
+), $nonAdminCookies);
+assertNotContains('non-admin schedule post', $postResp, 'Edit Schedule', $failures);
+
 if (!empty($failures)) {
 	fwrite(STDERR, "Smoke test failed:\n");
 	foreach ($failures as $fail) {

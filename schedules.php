@@ -25,7 +25,7 @@ if ($query->num_rows > 0) {
 		echo '	<option value="' . $row['teamID'] . '"' . ((!empty($team) && $team == $row['teamID']) ? ' selected="selected"' : '') . '>' . $row['city'] . ' ' . $row['team'] . '</option>' . "\n";
 	}
 }
-$query->free;
+$query->free();
 ?>
 </select> <b>OR</b> Week:
 <select name="week" onchange="javascript:location.href='schedules.php?week=' + this.value;">
@@ -38,7 +38,7 @@ if ($query->num_rows > 0) {
 		echo '	<option value="' . $row['weekNum'] . '"' . ((!empty($week) && $week == $row['weekNum']) ? ' selected="selected"' : '') . '>' . $row['weekNum'] . '</option>' . "\n";
 	}
 }
-$query->free;
+$query->free();
 ?>
 </select></p>
 <?php
@@ -90,6 +90,6 @@ if ($query->num_rows > 0) {
 	}
 	echo '</table>' . "\n";
 }
-$query->free;
+$query->free();
 
 include('includes/footer.php');

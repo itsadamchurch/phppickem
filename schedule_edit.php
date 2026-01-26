@@ -37,7 +37,7 @@ switch ($action) {
 		} else {
 			die('ah, something isn\'t quite right here...');
 		}
-		$query->free;
+		$query->free();
 
 		//update game and redirect to same week
 		$sql = "update " . DB_PREFIX . "schedule ";
@@ -87,7 +87,7 @@ if ($action == 'add' || $action == 'edit') {
 			header('Location: ' . $_SERVER['PHP_SELF']);
 			exit;
 		}
-		$query->free;
+		$query->free();
 	}
 ?>
 <script type="text/javascript" src="js/ui.core.js"></script>
@@ -139,7 +139,7 @@ if ($query->num_rows > 0) {
 		}
 	}
 }
-$query->free;
+$query->free();
 ?>
 </select></p>
 
@@ -158,7 +158,7 @@ if ($query->num_rows > 0) {
 		}
 	}
 }
-$query->free;
+$query->free();
 ?>
 </select></p>
 
@@ -185,7 +185,7 @@ $query->free;
 			echo '	<option value="' . $row['weekNum'] . '"' . ((!empty($week) && $week == $row['weekNum']) ? ' selected="selected"' : '') . '>' . $row['weekNum'] . '</option>' . "\n";
 		}
 	}
-	$query->free;
+	$query->free();
 ?>
 </select></p>
 <!--p><a href="<?php echo $_SERVER['PHP_SELF']; ?>?action=add&week=<?php echo $week; ?>"><img src="images/icons/add_16x16.png" width="16" height="16" alt="Add Game" /></a>&nbsp;<a href="<?php echo $_SERVER['PHP_SELF']; ?>?action=add">Add Game</a></p-->

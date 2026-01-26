@@ -41,7 +41,7 @@ if ($user->userName == 'admin') {
 				}
 			}
 		}
-		$query->free;
+		$query->free();
 		if (!$playoffOpen) {
 			if ($currentPlayoffRound > 0) {
 				$roundLabel = isset($playoffRoundNames[$currentPlayoffRound]) ? $playoffRoundNames[$currentPlayoffRound] : ('Round ' . $currentPlayoffRound);
@@ -97,7 +97,7 @@ include('includes/column_right.php');
 			'expired' => (int)$row['expired']
 		);
 	}
-	$query->free;
+	$query->free();
 
 	// playoffs if schedule exists
 	$playoffRoundNames = array(
@@ -135,7 +135,7 @@ include('includes/column_right.php');
 			'expired' => $expired
 		);
 	}
-	$query->free;
+	$query->free();
 
 	$hasPlayoffs = false;
 	foreach ($glanceItems as $item) {
@@ -228,7 +228,7 @@ include('includes/column_right.php');
 					$userScore += 1;
 				}
 			}
-			$query->free;
+			$query->free();
 			if ($item['expired']) {
 				echo '			<div class="bg-info"><b>Score: ' . $userScore . '/' . $item['gamesTotal'] . '</b><br /><a href="results.php?type=playoffs&round=' . $item['key'] . '">See Results &raquo;</a></div>' . "\n";
 			} else {

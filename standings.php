@@ -30,7 +30,7 @@ while ($row = $query->fetch_assoc()) {
 		$playoffTotals[$row['userID']] += 0;
 	}
 }
-$query->free;
+$query->free();
 
 // playoff stats by round
 $playoffRoundNames = array(
@@ -64,7 +64,7 @@ while ($row = $query->fetch_assoc()) {
 		$playoffWeekStats[$row['roundNum']]['scores'][$row['userID']] += 0;
 	}
 }
-$query->free;
+$query->free();
 foreach ($playoffWeekStats as $roundNum => $stats) {
 	if (!empty($stats['scores'])) {
 		arsort($stats['scores']);

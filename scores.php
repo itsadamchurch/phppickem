@@ -45,7 +45,7 @@ while ($row = $query->fetch_assoc()) {
 	}
 	$i++;
 }
-$query->free;
+$query->free();
 $weekNav .= '</div>' . "\n";
 echo $weekNav;
 ?>
@@ -103,7 +103,7 @@ if ($query->num_rows > 0) {
 	}
 	echo '</table>' . "\n";
 }
-$query->free;
+$query->free();
 ?>
 </div>
 <input type="submit" name="action" value="Update" class="btn btn-info" />

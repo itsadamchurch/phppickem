@@ -7,7 +7,7 @@ if (COMMENTS_SYSTEM == 'basic' && $_POST['action'] == 'Add Comment') {
 		$sql = "insert into " . DB_PREFIX . "comments (userID, subject, comment, postDateTime) values (" . $user->userID . ", '" . $mysqli->real_escape_string($_POST['subject']) . "', '" . $mysqli->real_escape_string($_POST['comment']) . "', now());";
 		$mysqli->query($sql) or die($mysqli->error);
 	}
-	$query->free;
+	$query->free();
 }
 ?>
 <div class="back2top"><a href="<?php echo $_SERVER['REQUEST_URI']; ?>#">Back to top</a></div>
@@ -50,7 +50,7 @@ if (COMMENTS_SYSTEM == 'basic') {
 		}
 		echo '<p>' . nl2br(trim($row['comment'])) . '</p>' . "\n";
 	}
-	$query->free;
+	$query->free();
 } else if (COMMENTS_SYSTEM == 'disqus') {
 ?>
  <div id="disqus_thread"></div>

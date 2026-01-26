@@ -31,7 +31,7 @@ while ($row = $query->fetch_assoc()) {
 	$conference = $row['conference'];
 	$division = $row['division'];
 }
-$query->free;
+$query->free();
 ?>
 		</td>
 	</tr>

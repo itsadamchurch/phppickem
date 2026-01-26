@@ -20,7 +20,7 @@ if ($_POST['action'] == 'Submit') {
 			}
 		}
 	}
-	$query->free;
+	$query->free();
 	header('Location: results.php?type=playoffs&round=' . $round);
 	exit;
 }
@@ -97,7 +97,7 @@ while ($row = $query->fetch_assoc()) {
 	}
 	$i++;
 }
-$query->free;
+$query->free();
 $roundNav .= '	</div>' . "\n";
 $roundNav .= '</div>' . "\n";
 echo $roundNav;
@@ -119,7 +119,7 @@ $query = $mysqli->query($sql);
 while ($row = $query->fetch_assoc()) {
 	$picks[$row['gameID']] = $row['pickTeamID'];
 }
-$query->free;
+$query->free();
 
 $sql = "select s.* from " . DB_PREFIX . "playoff_schedule s where s.roundNum = " . $round . " order by s.gameTimeEastern, s.playoffGameID";
 $query = $mysqli->query($sql) or die($mysqli->error);
@@ -197,7 +197,7 @@ if ($query->num_rows > 0) {
 } else {
 	echo '<p>No playoff games found for this round.</p>';
 }
-$query->free;
+$query->free();
 ?>
 		</div>
 	</div>

@@ -18,9 +18,9 @@ class StatsService {
 				$row = $query2->fetch_assoc();
 				return $row['weekNum'];
 			}
-			$query2->free;
+			$query2->free();
 		}
-		$query->free;
+		$query->free();
 		die('Error getting current week: ' . $mysqli->error);
 	}
 	
@@ -37,7 +37,7 @@ class StatsService {
 			$row = $query->fetch_assoc();
 			return $row['gameTimeEastern'];
 		}
-		$query->free;
+		$query->free();
 		die('Error getting cutoff date: ' . $mysqli->error);
 	}
 	
@@ -50,7 +50,7 @@ class StatsService {
 			$row = $query->fetch_assoc();
 			return $row['gameTimeEastern'];
 		}
-		$query->free;
+		$query->free();
 		die('Error getting first game time: ' . $mysqli->error);
 	}
 
@@ -63,7 +63,7 @@ class StatsService {
 			$row = $query->fetch_assoc();
 			return $row['gameTimeEastern'];
 		}
-		$query->free;
+		$query->free();
 		die('Error getting last game time: ' . $mysqli->error);
 	}
 	
@@ -78,7 +78,7 @@ class StatsService {
 		} else {
 			return false;
 		}
-		$query->free;
+		$query->free();
 		die('Error getting pick id: ' . $mysqli->error);
 	}
 	
@@ -98,7 +98,7 @@ class StatsService {
 		} else {
 			return false;
 		}
-		$query->free;
+		$query->free();
 		die('Error getting game id: ' . $mysqli->error);
 	}
 	
@@ -119,7 +119,7 @@ class StatsService {
 		} else {
 			return false;
 		}
-		$query->free;
+		$query->free();
 		die('Error getting game id: ' . $mysqli->error);
 	}
 	
@@ -135,7 +135,7 @@ class StatsService {
 		while ($row = $query->fetch_assoc()) {
 			$picks[$row['gameID']] = array('pickID' => $row['pickID'], 'points' => $row['points']);
 		}
-		$query->free;
+		$query->free();
 		return $picks;
 	}
 	
@@ -159,7 +159,7 @@ class StatsService {
 				$games[$row['gameID']]['winnerID'] = $row['visitorID'];
 			}
 		}
-		$query->free;
+		$query->free();
 	
 		//loop through player picks & calculate score
 		$sql = "select p.userID, p.gameID, p.pickID, p.points ";
@@ -175,7 +175,7 @@ class StatsService {
 				$score++;
 			}
 		}
-		$query->free;
+		$query->free();
 	
 		return $score;
 	}
@@ -189,7 +189,7 @@ class StatsService {
 			$row = $query->fetch_assoc();
 			return $row['gameTotal'];
 		}
-		$query->free;
+		$query->free();
 		die('Error getting game total: ' . $mysqli->error);
 	}
 	
@@ -202,7 +202,7 @@ class StatsService {
 			$row = $query->fetch_assoc();
 			return $row['expired'];
 		}
-		$query->free;
+		$query->free();
 		die('Error getting game locked status: ' . $mysqli->error);
 	}
 	
@@ -215,7 +215,7 @@ class StatsService {
 			$row = $query->fetch_assoc();
 			return (($row['showPicks']) ? 0 : 1);
 		}
-		$query->free;
+		$query->free();
 		return 0;
 	}
 	
@@ -235,7 +235,9 @@ class StatsService {
 				$lastCompletedWeek = (int)$row['weekNum'];
 			}
 		}
-		$query->free;
+		if ($query) {
+			$query->free();
+		}
 		return $lastCompletedWeek;
 	}
 	
@@ -264,7 +266,9 @@ class StatsService {
 					$games[$row['gameID']]['winnerID'] = $row['visitorID'];
 				}
 			}
-			$query->free;
+			if ($query) {
+				$query->free();
+			}
 	
 			//get array of player picks
 			$playerPicks = array();
@@ -279,6 +283,15 @@ class StatsService {
 			while ($row = $query->fetch_assoc()) {
 				$playerPicks[$row['userID'] . $row['gameID']] = $row['pickID'];
 				$playerWeeklyTotals[$row['userID']]['week'] = $week;
+				if (!isset($playerWeeklyTotals[$row['userID']]['score'])) {
+					$playerWeeklyTotals[$row['userID']]['score'] = 0;
+				}
+				if (!isset($playerTotals[$row['userID']]['wins'])) {
+					$playerTotals[$row['userID']]['wins'] = 0;
+				}
+				if (!isset($playerTotals[$row['userID']]['score'])) {
+					$playerTotals[$row['userID']]['score'] = 0;
+				}
 				$playerTotals[$row['userID']]['wins'] += 0;
 				$playerTotals[$row['userID']]['name'] = $row['firstname'] . ' ' . $row['lastname'];
 				$playerTotals[$row['userID']]['userName'] = $row['userName'];
@@ -291,7 +304,9 @@ class StatsService {
 					$playerTotals[$row['userID']]['score'] += 0;
 				}
 			}
-			$query->free;
+			if ($query) {
+				$query->free();
+			}
 	
 			//get winners & highest score for current week
 			$highestScore = 0;
@@ -388,7 +403,7 @@ class StatsService {
 		} else {
 			return '';
 		}
-		$query->free;
+		$query->free();
 	}
 	
 	public function getTeamStreak($teamID) {
@@ -428,6 +443,6 @@ class StatsService {
 		} else {
 			return '';
 		}
-		$query->free;
+		$query->free();
 	}
 }

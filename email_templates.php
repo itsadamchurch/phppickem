@@ -56,7 +56,7 @@ include('includes/header.php');
 					echo '<option value="' . $row['email_template_key'] . '"' . (($email_template_key == $row['email_template_key']) ? ' selected="selected"' : '') . '>' . $row['email_template_title'] . '</option>' . "\n";
 				}
 			}
-			$query->free;
+			$query->free();
 			?>
 		</select>&nbsp;<input type="submit" value="Select" /></p>
 

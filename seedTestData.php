@@ -1,12 +1,11 @@
 <?php
-require(__DIR__ . '/bootstrap.php');
-require(__DIR__ . '/../includes/application_top.php');
+require('includes/application_top.php');
 
 // Usage (CLI):
-// php tests/seedTestData.php --apply=1
+// php seedTestData.php --apply=1
 // Optional: --playoffs=1 to seed playoff picks too
 // Browser:
-// tests/seedTestData.php?apply=1
+// seedTestData.php?apply=1
 
 $args = array();
 if (PHP_SAPI === 'cli') {
@@ -43,7 +42,7 @@ foreach ($users as $idx => $u) {
 		$existingId = (int)$row['userID'];
 	}
 	if ($query) {
-		$query->free();
+		$query->free;
 	}
 
 	if ($apply && $existingId) {
@@ -87,7 +86,7 @@ $query = $mysqli->query($sql);
 while ($row = $query->fetch_assoc()) {
 	$schedule[] = $row;
 }
-$query->free();
+$query->free;
 if ($apply && count($schedule) === 0) {
 	$errors[] = 'Schedule is empty. Run buildSchedule.php before seeding picks.';
 }
@@ -128,7 +127,7 @@ if ($seedPlayoffs) {
 	while ($row = $query->fetch_assoc()) {
 		$playoffGames[] = $row;
 	}
-	$query->free();
+	$query->free;
 	foreach ($users as $uIndex => $u) {
 		$userId = (int)$userIds[$u['username']];
 		if ($apply && $userId > 0) {

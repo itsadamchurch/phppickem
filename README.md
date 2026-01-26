@@ -9,9 +9,9 @@ PHP Pick 'Em is a free php web application that allows you to host a weekly NFL 
 
 ## Minimum Requirements
 
-* PHP version 5.2 or greater
-* MySQL version 5.0 or greater with mysqli enabled
-* Mcrypt module for password encryption
+* PHP 7.4+ (Docker image defaults to PHP 8.x)
+* MySQL 8.0+ with mysqli enabled
+* Composer (recommended for HTMLPurifier dependency)
 
 
 ## Installation Instructions
@@ -59,7 +59,7 @@ If ESPN has not published the playoff schedule yet, the import may return 0 game
 Playoff picks entry:
 
 ```
-http://localhost:8080/playoff_entry.php
+http://localhost:8080/entry_form.php?type=playoffs
 ```
 
 Playoff results:
@@ -113,6 +113,37 @@ Picks + winners test (verifies seeded picks exist for each game, reports wins/lo
 ```
 php tests/picksWinnerTest.php --user=bob
 ```
+
+Run all tests (excludes seed/cleanup):
+
+```
+php tests/runAll.php --base=http://localhost:8080 --user=bob --pass=test1234 --admin_user=admin --admin_pass=admin --user2=sal --pass2=test1234
+```
+
+## Admin: Updating Scores
+
+Regular season (ESPN):
+
+```
+http://localhost:8080/updateRegularSeasonScores.php?apply=1&year=2025&week=1
+```
+
+Playoffs (ESPN):
+
+```
+http://localhost:8080/updatePlayoffScores.php?apply=1&year=2025&round=1
+```
+
+CLI examples:
+
+```
+php updateRegularSeasonScores.php --apply=1 --year=2025 --week=1
+php updatePlayoffScores.php --apply=1 --year=2025 --round=1
+```
+
+Notes:
+- These scripts require login (or run inside Docker) and update the `schedule` / `playoff_schedule` tables.
+- The legacy “Enter Scores” admin page exists (`scores.php`), but it relies on an older NFL.com endpoint and may not work for recent seasons.
 
 ## Composer (autoloading)
 

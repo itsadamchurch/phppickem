@@ -147,7 +147,7 @@ if ($_POST['action'] == 'Send Message') {
 		//header('Location: send_email.php');
 		//exit;
 	}
-	$query->free;
+	$query->free();
 }
 
 include('includes/header.php');
@@ -181,7 +181,7 @@ initRTE("js/cbrte/images/", "js/cbrte/", "", true);
 	while ($row = $query->fetch_assoc()) {
 		echo '<option value="' . $row['email_template_key'] . '"' . (($_POST['cannedMsg'] == $row['email_template_key']) ? ' selected="selected"' : '') . '>' . $row['email_template_title'] . '</option>' . "\n";
 	}
-	$query->free;
+	$query->free();
 	?>
 </select>&nbsp;<input type="submit" name="action" value="Select" class="btn btn-info" /></p>
 

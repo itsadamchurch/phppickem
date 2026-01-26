@@ -56,7 +56,7 @@ foreach ($usernames as $username) {
 		}
 	}
 	if ($query) {
-		$query->free;
+		$query->free();
 	}
 }
 
