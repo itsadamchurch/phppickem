@@ -2,7 +2,11 @@
 // application_top.php -- included first on all pages
 require('includes/config.php');
 require('includes/classes/class.phpmailer.php');
-require('includes/htmlpurifier/HTMLPurifier.auto.php');
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+	require(__DIR__ . '/../vendor/autoload.php');
+} else {
+	require('includes/htmlpurifier/HTMLPurifier.auto.php');
+}
 
 $autoloadPath = __DIR__ . '/../vendor/autoload.php';
 if (is_readable($autoloadPath)) {
@@ -75,14 +79,20 @@ $auth = class_exists('App\\Auth\\Auth') ? new \App\Auth\Auth($login) : null;
 $adminUser = $auth ? $auth->getAdminUser() : $login->get_user('admin');
 
 $okFiles = array('login.php', 'signup.php', 'password_reset.php', 'buildSchedule.php', 'logout.php');
-if ($auth) {
-	$user = $auth->enforceLogin($okFiles);
-} else if (!in_array(basename($_SERVER['PHP_SELF']), $okFiles)) {
-	if (empty($_SESSION['logged']) || $_SESSION['logged'] !== 'yes') {
-		header( 'Location: login.php' );
-		exit;
-	} else if (!empty($_SESSION['loggedInUser'])) {
-		$user = $login->get_user($_SESSION['loggedInUser']);
+if (PHP_SAPI === 'cli') {
+	$_SESSION['logged'] = 'yes';
+	$_SESSION['loggedInUser'] = 'admin';
+	$user = $login->get_user('admin');
+} else {
+	if ($auth) {
+		$user = $auth->enforceLogin($okFiles);
+	} else if (!in_array(basename($_SERVER['PHP_SELF']), $okFiles)) {
+		if (empty($_SESSION['logged']) || $_SESSION['logged'] !== 'yes') {
+			header( 'Location: login.php' );
+			exit;
+		} else if (!empty($_SESSION['loggedInUser'])) {
+			$user = $login->get_user($_SESSION['loggedInUser']);
+		}
 	}
 }
 

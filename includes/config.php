@@ -45,7 +45,11 @@ define('SEASON_YEAR', '2025');
 define('SERVER_TIMEZONE', 'America/Chicago'); // Your SERVER's timezone. NOTE: Game times will always be displayed in Eastern time, as they are on NFL.com. This setting makes sure cutoff times work properly.
 
 // ***DO NOT EDIT ANYTHING BELOW THIS LINE***
-error_reporting(E_ALL ^ E_NOTICE ^ E_STRICT ^ E_DEPRECATED);
+if (defined('E_STRICT')) {
+	error_reporting(E_ALL ^ E_NOTICE ^ E_STRICT ^ E_DEPRECATED);
+} else {
+	error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
+}
 
 //automatically set timezone offset (hours difference between your server's timezone and eastern time)
 date_default_timezone_set(SERVER_TIMEZONE);

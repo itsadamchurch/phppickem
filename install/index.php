@@ -27,6 +27,18 @@ echo '<h1>PHP Pick \'Em Installation</h1>' . "\n";
 
 switch ($step) {
 	case 3:
+		$composerOutput = '';
+		$composerStatus = null;
+		$vendorAutoload = dirname(__DIR__) . '/vendor/autoload.php';
+		$depsRequested = isset($_GET['deps']) && $_GET['deps'] === '1';
+		if (!file_exists($vendorAutoload)) {
+			if ($depsRequested && function_exists('exec')) {
+				$composerCmd = 'composer install --no-interaction --no-progress 2>&1';
+				exec($composerCmd, $composerLines, $composerStatus);
+				$composerOutput = implode("\n", $composerLines);
+			}
+		}
+
 		//install tables
 		/*
 		* Restore MySQL dump using PHP
@@ -76,6 +88,21 @@ switch ($step) {
 <h3><img src="accept.png" /> Step 2 - Install Database</h3>
 <h2>&gt; Step 3 - Complete</h2>
 <p>Congratulations!  Installation is complete.</p>
+<?php
+			if (!file_exists($vendorAutoload)) {
+?>
+<p><strong style="color: red;">Composer dependencies are not installed.</strong></p>
+<p>Click below to install dependencies (requires Composer on the server), or run <code>composer install</code> from the project root.</p>
+<p><input type="button" name="deps" value="Install Dependencies" onclick="location.href='<?php echo $_SERVER['PHP_SELF']; ?>?step=3&deps=1';" /></p>
+<?php
+				if ($depsRequested) {
+					echo '<pre style="white-space: pre-wrap;">' . htmlspecialchars($composerOutput) . '</pre>';
+					if ($composerStatus !== 0) {
+						echo '<p><strong style="color: red;">Composer install failed. Please run it manually.</strong></p>';
+					}
+				}
+			}
+?>
 <p><strong style="color: red;">Please delete the install folder</strong> and click "Complete!" below to continue.</p>
 <p>Log in for the first time with <b>admin / admin123</b>.  You may change your password once you are logged in.</p>
 <p><input type="button" name="step" value="Complete!" onclick="location.href='../login.php';" /></p>

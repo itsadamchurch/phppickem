@@ -20,7 +20,7 @@ PHP Pick 'Em is a free php web application that allows you to host a weekly NFL 
 2. Create a MySQL database on your web server, as well as a MySQL user who has all privileges for accessing and modifying it.
 3. Edit /includes/config.php and update database connection variables accordingly
 4. Upload files to your web server
-5. Run installer script at http://www.your-domain.com/phppickem/install.  The installer will assist you with the rest.
+5. Run installer script at http://www.your-domain.com/phppickem/install. The installer will assist you with the rest and can install Composer dependencies.
 
 ## Docker (local dev)
 
@@ -31,6 +31,14 @@ cp .env.example .env && docker compose up --build -d
 ```
 
 Then open `http://localhost:8080/` in your browser. Default login is `admin / admin123`.
+
+Composer dependencies are installed automatically when the container starts (if `vendor/` is missing).
+
+If you’re not using Docker, run Composer after install:
+
+```
+composer install
+```
 
 To stop:
 
