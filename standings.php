@@ -290,17 +290,17 @@ foreach ($playoffRoundNames as $roundNum => $label) {
 				$i = 0;
 				foreach($playerTotals as $playerID => $stats) {
 					$rowclass = (($i % 2 == 0) ? ' class="altrow"' : '');
-					$pickRatio = $stats[score] . '/' . $possibleScoreTotal;
-					$pickPercentage = number_format((($stats[score] / $possibleScoreTotal) * 100), 2) . '%';
+					$pickRatio = $stats['score'] . '/' . $possibleScoreTotal;
+					$pickPercentage = number_format((($stats['score'] / $possibleScoreTotal) * 100), 2) . '%';
 					switch (USER_NAMES_DISPLAY) {
 						case 1:
-							echo '	<tr' . $rowclass . '><td class="tiny">' . $stats[name] . '</td><td class="tiny" align="center">' . $stats[wins] . '</td><td class="tiny" align="center">' . $pickRatio . ' (' . $pickPercentage . ')</td></tr>';
+							echo '	<tr' . $rowclass . '><td class="tiny">' . $stats['name'] . '</td><td class="tiny" align="center">' . $stats['wins'] . '</td><td class="tiny" align="center">' . $pickRatio . ' (' . $pickPercentage . ')</td></tr>';
 							break;
 						case 2:
-							echo '	<tr' . $rowclass . '><td class="tiny">' . $stats[userName] . '</td><td class="tiny" align="center">' . $stats[wins] . '</td><td class="tiny" align="center">' . $pickRatio . ' (' . $pickPercentage . ')</td></tr>';
+							echo '	<tr' . $rowclass . '><td class="tiny">' . $stats['userName'] . '</td><td class="tiny" align="center">' . $stats['wins'] . '</td><td class="tiny" align="center">' . $pickRatio . ' (' . $pickPercentage . ')</td></tr>';
 							break;
 						default: //3
-							echo '	<tr' . $rowclass . '><td class="tiny"><abbr title="' . $stats[name] . '">' . $stats[userName] . '</abbr></td><td class="tiny" align="center">' . $stats[wins] . '</td><td class="tiny" align="center">' . $pickRatio . ' (' . $pickPercentage . ')</td></tr>';
+							echo '	<tr' . $rowclass . '><td class="tiny"><abbr title="' . $stats['name'] . '">' . $stats['userName'] . '</abbr></td><td class="tiny" align="center">' . $stats['wins'] . '</td><td class="tiny" align="center">' . $pickRatio . ' (' . $pickPercentage . ')</td></tr>';
 							break;
 					}
 					$i++;
