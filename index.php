@@ -31,11 +31,11 @@ if ($user->userName == 'admin') {
 			if (!empty($row['firstGameTime'])) {
 				$firstGameTime = new DateTime($row['firstGameTime'], new DateTimeZone("America/New_York"));
 				$lastGameTime = !empty($row['lastGameTime']) ? new DateTime($row['lastGameTime'], new DateTimeZone("America/New_York")) : $firstGameTime;
+				if ($nowEastern <= $lastGameTime) {
+					$playoffOpen = true;
+				}
 				if ($firstGameTime <= $nowEastern) {
 					$currentPlayoffRound = (int)$row['roundNum'];
-					if ($nowEastern <= $lastGameTime) {
-						$playoffOpen = true;
-					}
 				} else {
 					break;
 				}

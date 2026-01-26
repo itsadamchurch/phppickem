@@ -49,17 +49,12 @@ header('X-UA-Compatible:IE=Edge,chrome=1'); //IE8 respects this but not the meta
 								<?php
 									$playoffsAvailable = false;
 									$nowEastern = new DateTime("now", new DateTimeZone("America/New_York"));
-									$sql = "select min(gameTimeEastern) as firstGameTime from " . DB_PREFIX . "playoff_schedule where is_bye = 0";
-									$query = $mysqli->query($sql);
-									if ($query) {
-										$row = $query->fetch_assoc();
-										if (!empty($row['firstGameTime'])) {
-											$firstPlayoffTime = new DateTime($row['firstGameTime'], new DateTimeZone("America/New_York"));
-											if ($firstPlayoffTime <= $nowEastern) {
-												$playoffsAvailable = true;
-											}
+									$lastWeekTime = $statsService->getLastGameTime(18);
+									if (!empty($lastWeekTime)) {
+										$lastWeekTimeObj = new DateTime($lastWeekTime, new DateTimeZone("America/New_York"));
+										if ($nowEastern >= $lastWeekTimeObj) {
+											$playoffsAvailable = true;
 										}
-										$query->free;
 									}
 								?>
 								<?php if ($playoffsAvailable) { ?>
