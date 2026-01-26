@@ -1,4 +1,5 @@
 <?php
+require(__DIR__ . '/bootstrap.php');
 // Basic CLI smoke test that logs in and checks key pages + admin visibility.
 // Usage:
 // php tests/smokeTest.php --base=http://localhost:8080 --user=bob --pass=test1234 --admin_user=admin --admin_pass=admin --user2=sal --pass2=test1234
@@ -168,6 +169,7 @@ foreach ($pages as $page) {
 	}
 	assertPage($page[0], $resp, $page[2], $failures);
 }
+
 
 // Admin nav should be visible for admin user
 $adminCookies = loginUser($base, $adminUser, $adminPass, $verbose, $failures);

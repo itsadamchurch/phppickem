@@ -88,6 +88,32 @@ Cleanup test users and all their picks (regular + playoffs):
 php tests/cleanupTestData.php --apply=1
 ```
 
+## Tests (CLI)
+
+Smoke test (login, core pages, admin visibility):
+
+```
+php tests/smokeTest.php --base=http://localhost:8080 --user=bob --pass=test1234 --admin_user=admin --admin_pass=admin --user2=sal --pass2=test1234
+```
+
+Data presence test (standings + results show seeded user):
+
+```
+php tests/dataPresenceTest.php --base=http://localhost:8080 --user=bob --pass=test1234
+```
+
+Data accuracy test (stands + results match computed values up to current week):
+
+```
+php tests/dataAccuracyTest.php --base=http://localhost:8080 --user=bob --pass=test1234
+```
+
+Picks + winners test (verifies seeded picks exist for each game, reports wins/losses for completed games):
+
+```
+php tests/picksWinnerTest.php --user=bob
+```
+
 ## Composer (autoloading)
 
 If you want Composer autoloading (PSR-4):
