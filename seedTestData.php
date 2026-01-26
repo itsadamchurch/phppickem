@@ -31,6 +31,7 @@ $userIds = array();
 $totalPicks = 0;
 $totalPickSummary = 0;
 $totalPlayoffPicks = 0;
+$errors = array();
 
 foreach ($users as $idx => $u) {
 	$existingId = null;
@@ -45,10 +46,18 @@ foreach ($users as $idx => $u) {
 	}
 
 	if ($apply && $existingId) {
-		$mysqli->query("delete from " . DB_PREFIX . "picks where userID = " . $existingId);
-		$mysqli->query("delete from " . DB_PREFIX . "picksummary where userID = " . $existingId);
-		$mysqli->query("delete from " . DB_PREFIX . "playoff_picks where userID = " . $existingId);
-		$mysqli->query("delete from " . DB_PREFIX . "users where userID = " . $existingId);
+		if (!$mysqli->query("delete from " . DB_PREFIX . "picks where userID = " . $existingId)) {
+			$errors[] = 'Error deleting picks for userID ' . $existingId . ': ' . $mysqli->error;
+		}
+		if (!$mysqli->query("delete from " . DB_PREFIX . "picksummary where userID = " . $existingId)) {
+			$errors[] = 'Error deleting picksummary for userID ' . $existingId . ': ' . $mysqli->error;
+		}
+		if (!$mysqli->query("delete from " . DB_PREFIX . "playoff_picks where userID = " . $existingId)) {
+			$errors[] = 'Error deleting playoff picks for userID ' . $existingId . ': ' . $mysqli->error;
+		}
+		if (!$mysqli->query("delete from " . DB_PREFIX . "users where userID = " . $existingId)) {
+			$errors[] = 'Error deleting userID ' . $existingId . ': ' . $mysqli->error;
+		}
 	}
 
 	$hash = password_hash($plainPassword, PASSWORD_DEFAULT);
@@ -61,7 +70,9 @@ foreach ($users as $idx => $u) {
 			"'" . $mysqli->real_escape_string($u['last']) . "', " .
 			"'" . $mysqli->real_escape_string($u['email']) . "', " .
 			"1, 0)";
-		$mysqli->query($sql) or die('Error inserting user: ' . $mysqli->error);
+		if (!$mysqli->query($sql)) {
+			$errors[] = 'Error inserting user ' . $u['username'] . ': ' . $mysqli->error;
+		}
 		$userIds[$u['username']] = (int)$mysqli->insert_id;
 	} else {
 		$userIds[$u['username']] = $existingId ? $existingId : 0;
@@ -76,6 +87,9 @@ while ($row = $query->fetch_assoc()) {
 	$schedule[] = $row;
 }
 $query->free;
+if ($apply && count($schedule) === 0) {
+	$errors[] = 'Schedule is empty. Run buildSchedule.php before seeding picks.';
+}
 
 $weeks = array();
 foreach ($schedule as $game) {
@@ -87,13 +101,17 @@ foreach ($users as $uIndex => $u) {
 	if ($apply && $userId > 0) {
 		foreach ($weeks as $weekNum => $unused) {
 			$sql = "insert into " . DB_PREFIX . "picksummary (weekNum, userID, showPicks) values (" . (int)$weekNum . ", " . $userId . ", 1)";
-			$mysqli->query($sql);
+			if (!$mysqli->query($sql)) {
+				$errors[] = 'Error inserting picksummary for userID ' . $userId . ', week ' . $weekNum . ': ' . $mysqli->error;
+			}
 			$totalPickSummary++;
 		}
 		foreach ($schedule as $game) {
 			$pickTeam = (((int)$game['gameID'] + $uIndex) % 2 === 0) ? $game['homeID'] : $game['visitorID'];
 			$sql = "insert into " . DB_PREFIX . "picks (userID, gameID, pickID) values (" . $userId . ", " . (int)$game['gameID'] . ", '" . $mysqli->real_escape_string($pickTeam) . "')";
-			$mysqli->query($sql);
+			if (!$mysqli->query($sql)) {
+				$errors[] = 'Error inserting pick for userID ' . $userId . ', gameID ' . $game['gameID'] . ': ' . $mysqli->error;
+			}
 			$totalPicks++;
 		}
 	} else {
@@ -116,7 +134,9 @@ if ($seedPlayoffs) {
 			foreach ($playoffGames as $game) {
 				$pickTeam = (((int)$game['playoffGameID'] + $uIndex) % 2 === 0) ? $game['homeID'] : $game['visitorID'];
 				$sql = "insert into " . DB_PREFIX . "playoff_picks (userID, gameID, pickTeamID) values (" . $userId . ", " . (int)$game['playoffGameID'] . ", '" . $mysqli->real_escape_string($pickTeam) . "')";
-				$mysqli->query($sql);
+				if (!$mysqli->query($sql)) {
+					$errors[] = 'Error inserting playoff pick for userID ' . $userId . ', gameID ' . $game['playoffGameID'] . ': ' . $mysqli->error;
+				}
 				$totalPlayoffPicks++;
 			}
 		} else {
@@ -127,6 +147,12 @@ if ($seedPlayoffs) {
 
 if (!$apply) {
 	echo "Dry run complete. Use apply=1 to insert test data." . PHP_EOL;
+}
+if (count($errors) > 0) {
+	echo "Errors:" . PHP_EOL;
+	foreach ($errors as $error) {
+		echo "- " . $error . PHP_EOL;
+	}
 }
 echo "Seed complete. Users: " . count($users) . ", Picks: " . $totalPicks . ", Pick summaries: " . $totalPickSummary;
 if ($seedPlayoffs) {
