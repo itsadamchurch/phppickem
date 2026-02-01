@@ -2,8 +2,12 @@
 require_once('includes/application_top.php');
 require('includes/classes/team.php');
 
+$activeTab = 'entry';
 $type = (!empty($_GET['type']) && $_GET['type'] === 'playoffs') || (!empty($_POST['type']) && $_POST['type'] === 'playoffs') ? 'playoffs' : 'regular';
 $round = (int)$_GET['round'];
+if ($type === 'playoffs') {
+	$activeTab = 'playoffs';
+}
 
 if ($_POST['action'] == 'Submit') {
 	if ($type === 'playoffs') {
@@ -297,7 +301,7 @@ include('includes/column_right.php');
 			$visitorScore = (int)$row['visitorScore'];
 			$rowclass = (($i % 2 == 0) ? ' class="altrow"' : '');
 			echo '				<div class="matchup">' . "\n";
-			echo '					<div class="row bg-row1">'."\n";
+			echo '					<div class="row bg-row1 field-row">'."\n";
 			if (!empty($homeScore) || !empty($visitorScore)) {
 				//if score is entered, show score
 				$scoreEntered = true;
@@ -335,7 +339,7 @@ include('includes/column_right.php');
 			$visitorLockedClass = (!empty($lockedPickTeamId) && $lockedPickTeamId === $visitorTeam->teamID) ? $lockedPickClass : '';
 			echo '							<label for="' . $gameId . $visitorTeam->teamID . '" class="label-for-check"><div class="team-logo ' . $visitorLockedClass . '"><img src="images/logos/'.$visitorTeam->teamID.'.svg" onclick="document.entryForm.game'.$gameId.'[0].checked=true;" /></div></label>' . "\n";
 			echo '						</div>'."\n";
-			echo '						<div class="col-xs-2">@</div>' . "\n";
+			echo '						<div class="col-xs-2 vs-at">@</div>' . "\n";
 			echo '						<div class="col-xs-4">'."\n";
 			$homeLockedClass = (!empty($lockedPickTeamId) && $lockedPickTeamId === $homeTeam->teamID) ? $lockedPickClass : '';
 			echo '							<label for="' . $gameId . $homeTeam->teamID . '" class="label-for-check"><div class="team-logo ' . $homeLockedClass . '"><img src="images/logos/'.$homeTeam->teamID.'.svg" onclick="document.entryForm.game' . $gameId . '[1].checked=true;" /></div></label>'."\n";
@@ -343,7 +347,7 @@ include('includes/column_right.php');
 			echo '						<div class="col-xs-1"></div>' . "\n";
 			echo '					</div>' . "\n";
 			if (!$expired) {
-				echo '					<div class="row bg-row2">'."\n";
+				echo '					<div class="row bg-row2 field-row">'."\n";
 				echo '						<div class="col-xs-1"></div>' . "\n";
 				echo '						<div class="col-xs-4 center">'."\n";
 				echo '							<input type="radio" class="check-with-label" name="game' . $gameId . '" value="' . $visitorTeam->teamID . '" id="' . $gameId . $visitorTeam->teamID . '"' . (($pickValue == $visitorTeam->teamID) ? ' checked' : '') . ' />'."\n";
@@ -356,7 +360,7 @@ include('includes/column_right.php');
 				echo '						<div class="col-xs-1"></div>' . "\n";
 				echo '					</div>' . "\n";
 			}
-			echo '					<div class="row bg-row3">'."\n";
+			echo '					<div class="row bg-row3 field-row">'."\n";
 			echo '						<div class="col-xs-6 center">'."\n";
 			echo '							<div class="team">' . $visitorTeam->city . ' ' . $visitorTeam->team . '</div>'."\n";
 			$teamRecord = trim($statsService->getTeamRecord($visitorTeam->teamID));
@@ -399,7 +403,7 @@ include('includes/column_right.php');
 						$statusImg = '<img src="images/cross_16x16.png" width="16" height="16" alt="" />';
 					}
 				}
-				echo '						<div class="col-xs-12 center your-pick"><b>Pick locked:</b></br />';
+				echo '						<div class="col-xs-12 center field-row"><b>Pick locked:</b></br />';
 				echo $statusImg . ' ' . $pickLabel;
 				echo '</div>' . "\n";
 				echo '					</div>' . "\n";
@@ -410,7 +414,7 @@ include('includes/column_right.php');
 		echo '		</div>' . "\n";
 		echo '		</div>' . "\n";
 		echo '<p class="noprint"><input type="checkbox" name="showPicks" id="showPicks" value="1"' . (($showPicks) ? ' checked="checked"' : '') . ' /> <label for="showPicks">Allow others to see my picks</label></p>' . "\n";
-		echo '<p class="noprint"><input type="submit" name="action" value="Submit" /></p>' . "\n";
+		echo '<p class="noprint"><input type="submit" class="btn btn-primary" name="action" value="Submit" /></p>' . "\n";
 		echo '</form>' . "\n";
 	}
 

@@ -12,6 +12,9 @@ header('X-UA-Compatible:IE=Edge,chrome=1'); //IE8 respects this but not the meta
 	<base href="<?php echo SITE_URL; ?>" />
 	<link rel="stylesheet" type="text/css" media="all" href="css/bootstrap.min.css" />
 	<link rel="stylesheet" type="text/css" media="all" href="css/all.css" />
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&display=swap" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+	<link rel="stylesheet" type="text/css" media="all" href="css/modern.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="css/jquery.countdown.css" />
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 	<script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
@@ -61,11 +64,11 @@ header('X-UA-Compatible:IE=Edge,chrome=1'); //IE8 respects this but not the meta
 								<?php if ($playoffsAvailable) { ?>
 								<li<?php echo (($activeTab == 'playoffs') ? ' class="active"' : ''); ?>><a href="entry_form.php?type=playoffs">Playoff Picks</a></li>
 								<?php } else { ?>
-								<li><a href="entry_form.php<?php echo ((!empty($_GET['week'])) ? '?week=' . (int)$_GET['week'] : ''); ?>">Entry Form</a></li>
+								<li<?php echo (($activeTab == 'entry') ? ' class="active"' : ''); ?>><a href="entry_form.php<?php echo ((!empty($_GET['week'])) ? '?week=' . (int)$_GET['week'] : ''); ?>">Entry Form</a></li>
 								<?php } ?>
 								<?php } ?>
-								<li><a href="results.php<?php echo ((!empty($_GET['week'])) ? '?week=' . (int)$_GET['week'] : ''); ?>">Results</a></li>
-								<li><a href="standings.php">Standings</a></li>
+								<li<?php echo (($activeTab == 'results') ? ' class="active"' : ''); ?>><a href="results.php<?php echo ((!empty($_GET['week'])) ? '?week=' . (int)$_GET['week'] : ''); ?>">Results</a></li>
+								<li<?php echo (($activeTab == 'standings') ? ' class="active"' : ''); ?>><a href="standings.php">Standings</a></li>
 								<!--li><a href="teams.php">Teams</a></li-->
 								<!--li><a href="schedules.php">Schedules</a></li-->
 								<?php if ($_SESSION['logged'] === 'yes' && $user->is_admin) { ?>

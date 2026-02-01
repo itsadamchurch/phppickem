@@ -1,6 +1,7 @@
 <?php
 require('includes/application_top.php');
 
+$activeTab = 'results';
 $type = (!empty($_GET['type']) && $_GET['type'] === 'playoffs') ? 'playoffs' : 'regular';
 $week = (int)$_GET['week'];
 $round = (int)$_GET['round'];
@@ -195,7 +196,7 @@ if ($type !== 'playoffs') {
 if (sizeof($playerTotals) > 0) {
 ?>
 <div class="table-responsive">
-<table class="table table-striped">
+<table class="table table-striped table-modern">
 	<thead>
 		<tr><th align="left">Player</th><th colspan="<?php echo sizeof($games); ?>"><?php echo ($type === 'playoffs') ? $roundLabel : 'Week ' . $week; ?></th><th align="left">Score</th></tr>
 	</thead>

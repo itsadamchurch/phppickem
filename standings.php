@@ -1,6 +1,7 @@
 <?php
 require('includes/application_top.php');
 
+$activeTab = 'standings';
 $stats = $statsService->calculateStats();
 $weekStats = $stats['weekStats'];
 $playerTotals = $stats['playerTotals'];
@@ -85,7 +86,7 @@ include('includes/header.php');
 <h1>Standings</h1>
 <h2>Weekly Stats</h2>
 <div class="table-responsive">
-<table class="table table-striped">
+<table class="table table-striped table-modern">
 	<tr><th align="left">Week</th><th align="left">Winner(s)</th><th>Score</th></tr>
 <?php
 if (isset($weekStats)) {
@@ -131,7 +132,7 @@ foreach ($playoffRoundNames as $roundNum => $label) {
 <?php if (!empty($playoffStatsRows)) { ?>
 <h2>Playoff Weekly Stats</h2>
 <div class="table-responsive">
-<table class="table table-striped">
+<table class="table table-striped table-modern">
 	<tr><th align="left">Round</th><th align="left">Winner(s)</th><th>Score</th></tr>
 <?php
 	$i = 0;
@@ -168,7 +169,7 @@ foreach ($playoffRoundNames as $roundNum => $label) {
 	<div class="col-md-4 col-xs-12">
 		<b>By Wins</b><br />
 		<div class="table-responsive">
-			<table class="table table-striped">
+			<table class="table table-striped table-modern">
 				<tr><th align="left">Player</th><th align="left">Wins</th></tr>
 			<?php
 			if (!empty($playoffTotals)) {

@@ -190,9 +190,9 @@ include('includes/column_right.php');
 				if ($lastCompletedWeek >= (int)$item['key']) {
 					$weekTotal = $statsService->getGameTotal($item['key']);
 					$userScore = $statsService->getUserScore($item['key'], $user->userID);
-					echo '			<div class="bg-info"><b>Score: ' . $userScore . '/' . $weekTotal . ' (' . number_format(($userScore / $weekTotal) * 100, 2) . '%)</b><br /><a href="results.php?week='.$item['key'].'">See Results &raquo;</a></div>' . "\n";
+					echo '			<div class="bg-info"><b>Score: ' . $userScore . '/' . $weekTotal . ' (' . number_format(($userScore / $weekTotal) * 100, 2) . '%)</b><br /><a class="btn-football" href="results.php?week='.$item['key'].'"><i class="fa-solid fa-football"></i><span class="btn-football-label">See Results</span></a></div>' . "\n";
 				} else {
-					echo '			<div class="bg-info">Week is closed,</b> but scores have not yet been entered.<br /><a href="results.php?week='.$item['key'].'">See Results &raquo;</a></div>' . "\n";
+					echo '			<div class="bg-info">Week is closed,</b> but scores have not yet been entered.<br /><a class="btn-football" href="results.php?week='.$item['key'].'"><i class="fa-solid fa-football"></i><span class="btn-football-label">See Results</span></a></div>' . "\n";
 				}
 			} else {
 				$picks = $statsService->getUserPicks($item['key'], $user->userID);
@@ -201,9 +201,9 @@ include('includes/column_right.php');
 					if ((int)$currentWeek == (int)$item['key']) {
 						$tmpStyle = ' style="color: red;"';
 					}
-					echo '			<div class="bg-warning"'.$tmpStyle.'><b>Missing ' . ((int)$item['gamesTotal'] - sizeof($picks)) . ' / ' . $item['gamesTotal'] . ' picks.</b><br /><a href="entry_form.php?week=' . $item['key'] . '">Enter now &raquo;</a></div>' . "\n";
+					echo '			<div class="bg-warning"'.$tmpStyle.'><b>Missing ' . ((int)$item['gamesTotal'] - sizeof($picks)) . ' / ' . $item['gamesTotal'] . ' picks.</b><br /><a class="btn-football" href="entry_form.php?week=' . $item['key'] . '"><i class="fa-solid fa-football"></i><span class="btn-football-label">Enter now</span></a></div>' . "\n";
 				} else {
-					echo '			<div class="bg-info" style="color: green;"><b>All picks entered.</b><br /><a href="entry_form.php?week=' . $item['key'] . '">Change your picks &raquo;</a></div>' . "\n";
+					echo '			<div class="bg-info" style="color: green;"><b>All picks entered.</b><br /><a class="btn-football" href="entry_form.php?week=' . $item['key'] . '"><i class="fa-solid fa-football"></i><span class="btn-football-label">Change picks</span></a></div>' . "\n";
 				}
 			}
 		} else {
@@ -230,12 +230,12 @@ include('includes/column_right.php');
 			}
 			$query->free();
 			if ($item['expired']) {
-				echo '			<div class="bg-info"><b>Score: ' . $userScore . '/' . $item['gamesTotal'] . '</b><br /><a href="results.php?type=playoffs&round=' . $item['key'] . '">See Results &raquo;</a></div>' . "\n";
+				echo '			<div class="bg-info"><b>Score: ' . $userScore . '/' . $item['gamesTotal'] . '</b><br /><a class="btn-football" href="results.php?type=playoffs&round=' . $item['key'] . '"><i class="fa-solid fa-football"></i><span class="btn-football-label">See Results</span></a></div>' . "\n";
 			} else {
 				if ($pickCount < (int)$item['gamesTotal']) {
-					echo '			<div class="bg-warning"><b>Missing ' . ((int)$item['gamesTotal'] - $pickCount) . ' / ' . $item['gamesTotal'] . ' picks.</b><br /><a href="entry_form.php?type=playoffs&round=' . $item['key'] . '">Enter now &raquo;</a></div>' . "\n";
+					echo '			<div class="bg-warning"><b>Missing ' . ((int)$item['gamesTotal'] - $pickCount) . ' / ' . $item['gamesTotal'] . ' picks.</b><br /><a class="btn-football" href="entry_form.php?type=playoffs&round=' . $item['key'] . '"><i class="fa-solid fa-football"></i><span class="btn-football-label">Enter now</span></a></div>' . "\n";
 				} else {
-					echo '			<div class="bg-info" style="color: green;"><b>All picks entered.</b><br /><a href="entry_form.php?type=playoffs&round=' . $item['key'] . '">Change your picks &raquo;</a></div>' . "\n";
+					echo '			<div class="bg-info" style="color: green;"><b>All picks entered.</b><br /><a class="btn-football" href="entry_form.php?type=playoffs&round=' . $item['key'] . '"><i class="fa-solid fa-football"></i><span class="btn-football-label">Change picks</span></a></div>' . "\n";
 				}
 			}
 		}

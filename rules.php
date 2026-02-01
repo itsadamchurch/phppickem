@@ -12,7 +12,7 @@ require_once('includes/header.php');
 
 <h2>Making and Changing Entries</h2>
 <p>When filling in an entry form, you do not have to make a pick for each game.  This is helpful if there are early games scheduled for a given week (games played on a Thursday, Friday or Saturday). You may make your picks for these games beforehand and complete the rest later.</p>
-<p>Games are automatically locked out on the entry form according to their scheduled date and time. Early games are locked at the start of the individual game. All remaining games (including the Monday Night Football game) are locked at the scheduled start time of the first Sunday game.</p>
+<p>Games are automatically locked at kickoff. Once a game has started, you can no longer make or change a pick for that game.</p>
 <p>Note: all times displayed on the schedule are Eastern.</p>
 <p>You may change your pick for any game up until the time that game is locked.</p>
 <p>Entries must be completed on time. Once a game is locked, you may not change your pick for it. If you did not make a pick for a particular game, it is counted as a loss. If you submit a partial entry and either forget or are unable to complete it, the games you did not pick will count as losses.</p>
@@ -20,9 +20,7 @@ require_once('includes/header.php');
 
 <p>If you have any questions, please contact the <a href="mailto:<?php echo $adminUser->email; ?>">Administrator</a></p>
 
-<h2>2008 Rule Changes:</h2>
-<p>- No more weekly tiebreaker scores.  To make things even easier, all you need to do week to week is make picks.</p>
-<p>- No more "shared wins".  If 2 players are tied for the highest score, both players get a win.</p>
+<!-- 2008 rule changes section removed -->
 
 <!--
 Navigating the Site
