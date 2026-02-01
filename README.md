@@ -141,9 +141,51 @@ php updateRegularSeasonScores.php --apply=1 --year=2025 --week=1
 php updatePlayoffScores.php --apply=1 --year=2025 --round=1
 ```
 
+Debug output (shows ESPN URL used and per-week stats):
+
+```
+http://localhost:8080/updateRegularSeasonScores.php?week=1&debug=1
+```
+
 Notes:
 - These scripts require login (or run inside Docker) and update the `schedule` / `playoff_schedule` tables.
-- The legacy “Enter Scores” admin page exists (`scores.php`), but it relies on an older NFL.com endpoint and may not work for recent seasons.
+- The “Enter Scores” admin page (`scores.php`) pulls from ESPN via `getHtmlScores.php`.
+
+## Admin: Updating Playoff Schedule (ESPN)
+
+Update a playoff round (writes to `playoff_schedule`):
+
+```
+http://localhost:8080/buildPlayoffSchedule.php?round=4&apply=1&year=2025
+```
+
+Debug output (shows ESPN URL used + games to insert):
+
+```
+http://localhost:8080/buildPlayoffSchedule.php?round=4&debug=1&year=2025
+```
+
+## Cron Ideas (future)
+
+Regular season scores (e.g., every Tuesday morning during the season):
+
+```
+curl -s "http://localhost:8080/updateRegularSeasonScores.php?apply=1&year=2025"
+```
+
+Playoff scores (after each round):
+
+```
+curl -s "http://localhost:8080/updatePlayoffScores.php?apply=1&year=2025&round=1"
+```
+
+Playoff schedule updates (as brackets advance):
+
+```
+curl -s "http://localhost:8080/buildPlayoffSchedule.php?round=4&apply=1&year=2025"
+```
+
+Tip: if you want JSON for logging/monitoring, add `&debug=1` to these URLs.
 
 ## Composer (autoloading)
 

@@ -1,13 +1,22 @@
 <?php
 require('includes/application_top.php');
 
+$isCli = (PHP_SAPI === 'cli');
+if (!$isCli) {
+	$user = isset($user) ? $user : null;
+	if (!$user || !$user->is_admin) {
+		header('Location: ./');
+		exit;
+	}
+}
+
 // Usage (CLI):
 // php updatePlayoffScores.php --apply=1 --year=2025 --round=1
 // Or via browser:
 // updatePlayoffScores.php?apply=1&year=2025&round=1
 
 $args = array();
-if (PHP_SAPI === 'cli') {
+if ($isCli) {
 	foreach ($argv as $arg) {
 		if (strpos($arg, '--') === 0) {
 			$parts = explode('=', substr($arg, 2), 2);
@@ -19,6 +28,8 @@ if (PHP_SAPI === 'cli') {
 $year = isset($args['year']) ? (int)$args['year'] : (isset($_GET['year']) ? (int)$_GET['year'] : (int)SEASON_YEAR);
 $apply = isset($args['apply']) ? ($args['apply'] === '1') : (isset($_GET['apply']) && $_GET['apply'] === '1');
 $roundFilter = isset($args['round']) ? (int)$args['round'] : (isset($_GET['round']) ? (int)$_GET['round'] : 0);
+$debug = isset($args['debug']) ? ($args['debug'] === '1') : (isset($_GET['debug']) && $_GET['debug'] === '1');
+$returnUrl = isset($args['return']) ? $args['return'] : (isset($_GET['return']) ? $_GET['return'] : '');
 
 $rounds = array(1, 2, 3, 4);
 if ($roundFilter > 0) {
@@ -35,9 +46,26 @@ $teamMap = array(
 $updates = 0;
 $skipped = 0;
 $errors = array();
+$debugOutput = array();
 
 foreach ($rounds as $round) {
-	$url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=".$year."&seasontype=3&week=".$round;
+	$dateParam = '';
+	$minMaxQuery = $mysqli->query("select min(gameTimeEastern) as minTime, max(gameTimeEastern) as maxTime from " . DB_PREFIX . "playoff_schedule where roundNum = " . (int)$round);
+	if ($minMaxQuery && $minMaxQuery->num_rows > 0) {
+		$row = $minMaxQuery->fetch_assoc();
+		if (!empty($row['minTime']) && !empty($row['maxTime'])) {
+			$start = date('Ymd', strtotime($row['minTime']));
+			$end = date('Ymd', strtotime($row['maxTime']));
+			if (!empty($start) && !empty($end)) {
+				$dateParam = ($start === $end) ? $start : ($start . '-' . $end);
+			}
+		}
+		$minMaxQuery->free();
+	}
+	$url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=3&week=" . $round . "&dates=" . $year;
+	if (!empty($dateParam)) {
+		$url .= "&dates=" . $dateParam;
+	}
 	$json = @file_get_contents($url);
 	if (!$json) {
 		$errors[] = "Error fetching ESPN data for round " . $round;
@@ -45,6 +73,9 @@ foreach ($rounds as $round) {
 	}
 	$decoded = json_decode($json, true);
 	$events = isset($decoded['events']) ? $decoded['events'] : array();
+	$roundUpdates = 0;
+	$roundSkipped = 0;
+	$roundCompletedCount = 0;
 	foreach ($events as $event) {
 		if (empty($event['competitions'][0]['competitors'])) {
 			continue;
@@ -57,6 +88,13 @@ foreach ($rounds as $round) {
 		$overtime = 0;
 
 		$status = isset($event['competitions'][0]['status']) ? $event['competitions'][0]['status'] : array();
+		$completed = !empty($status['type']['completed']);
+		if (!$completed) {
+			$skipped++;
+			$roundSkipped++;
+			continue;
+		}
+		$roundCompletedCount++;
 		if (!empty($status['period']) && (int)$status['period'] > 4) {
 			$overtime = 1;
 		}
@@ -80,11 +118,13 @@ foreach ($rounds as $round) {
 
 		if (!$homeTeam || !$awayTeam) {
 			$skipped++;
+			$roundSkipped++;
 			continue;
 		}
 
 		if ($homeScore === null || $awayScore === null) {
 			$skipped++;
+			$roundSkipped++;
 			continue;
 		}
 
@@ -99,16 +139,46 @@ foreach ($rounds as $round) {
 				$mysqli->query($updateSqlSwap);
 				if ($mysqli->affected_rows > 0) {
 					$updates++;
+					$roundUpdates++;
 				} else {
 					$skipped++;
+					$roundSkipped++;
 				}
 			} else {
 				$updates++;
+				$roundUpdates++;
 			}
 		} else {
 			$updates++;
+			$roundUpdates++;
 		}
 	}
+	if ($debug) {
+		$debugOutput[] = array(
+			'round' => (int)$round,
+			'url' => $url,
+			'dateParam' => $dateParam,
+			'eventsFound' => count($events),
+			'updated' => $roundUpdates,
+			'skipped' => $roundSkipped
+		);
+	}
+	if ($roundCompletedCount === 0) {
+		break;
+	}
+}
+
+if ($debug && !$isCli) {
+	header('Content-Type: application/json; charset=utf-8');
+	echo json_encode(array(
+		'year' => $year,
+		'apply' => $apply ? 1 : 0,
+		'updated' => $updates,
+		'skipped' => $skipped,
+		'errors' => $errors,
+		'rounds' => $debugOutput
+	));
+	exit;
 }
 
 if (!$apply) {
@@ -120,4 +190,10 @@ if (count($errors) > 0) {
 	foreach ($errors as $error) {
 		echo "- " . $error . PHP_EOL;
 	}
+}
+
+if (!$isCli && !empty($returnUrl)) {
+	$sep = (strpos($returnUrl, '?') !== false) ? '&' : '?';
+	header('Location: ' . $returnUrl . $sep . 'updated_count=' . $updates);
+	exit;
 }
