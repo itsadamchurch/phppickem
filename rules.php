@@ -7,8 +7,8 @@ require_once('includes/header.php');
 <h2>Basics</h2>
 <p>The concept of NFL Pick 'Em is simple: pick the winners of each game each week.</p>
 <p>To enter, fill in the entry form by selecting the outcome of each game.</p>
-<p>The player who accurately predicts the most correct winners each week gets a win.  If two players share the winning score for a week, the win is awarded to both players.</p>
-<p>At the end of the football season the person who has the most weekly wins, is the winner.  The final tie breaker is determined by who has the better overall pick ratio (correct picks / total picks).</p>
+<p>The player who accurately predicts the most correct winners each week gets a weekly win.  If two players share the winning score for a week, the win is awarded to both players.</p>
+<p>At the end of the football season the person who has the most total wins is the winner. If there is a tie, the tie breaker is weekly wins. If still tied, each tied player must submit a Super Bowl score prediction to the Administrator. The tie breaker point total is calculated as: (NFC score guessed − actual score) + (AFC score guessed − actual score). Lowest total wins.</p>
 
 <h2>Making and Changing Entries</h2>
 <p>When filling in an entry form, you do not have to make a pick for each game.  This is helpful if there are early games scheduled for a given week (games played on a Thursday, Friday or Saturday). You may make your picks for these games beforehand and complete the rest later.</p>

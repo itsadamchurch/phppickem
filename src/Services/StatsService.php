@@ -322,7 +322,99 @@ class StatsService {
 			}
 			$weekStats[$week]['highestScore'] = $highestScore;
 			$weekStats[$week]['possibleScore'] = $this->getGameTotal($week);
+			$weekStats[$week]['label'] = 'Week ' . $week;
+			$weekStats[$week]['sortOrder'] = (int)$week;
 			$possibleScoreTotal += $weekStats[$week]['possibleScore'];
+		}
+
+		// playoff stats by round (do not add to possibleScoreTotal)
+		$playoffRoundLabels = array(
+			1 => 'WC',
+			2 => 'DIV',
+			3 => 'CONF',
+			4 => 'SB'
+		);
+		$playoffWeekStats = array();
+		$playoffGames = array();
+		$sql = "select playoffGameID, roundNum, homeID, visitorID, homeScore, visitorScore ";
+		$sql .= "from " . DB_PREFIX . "playoff_schedule ";
+		$sql .= "where is_bye = 0 and homeScore is not null and visitorScore is not null ";
+		$query = $mysqli->query($sql);
+		while ($row = $query->fetch_assoc()) {
+			$homeScore = (int)$row['homeScore'];
+			$visitorScore = (int)$row['visitorScore'];
+			if ($homeScore + $visitorScore <= 0) {
+				continue;
+			}
+			$winnerID = ($homeScore > $visitorScore) ? $row['homeID'] : $row['visitorID'];
+			$playoffGames[(int)$row['playoffGameID']] = array(
+				'roundNum' => (int)$row['roundNum'],
+				'winnerID' => $winnerID
+			);
+			if (!isset($playoffWeekStats[(int)$row['roundNum']])) {
+				$playoffWeekStats[(int)$row['roundNum']] = array('winners' => array(), 'highestScore' => 0, 'possibleScore' => 0, 'scores' => array());
+			}
+			$playoffWeekStats[(int)$row['roundNum']]['possibleScore'] += 1;
+		}
+		if ($query) {
+			$query->free();
+		}
+
+		if (!empty($playoffGames)) {
+			$sql = "select p.userID, p.gameID, p.pickTeamID, u.firstname, u.lastname, u.userName ";
+			$sql .= "from " . DB_PREFIX . "playoff_picks p ";
+			$sql .= "inner join " . DB_PREFIX . "users u on p.userID = u.userID ";
+			$sql .= "where u.userName <> 'admin' ";
+			$query = $mysqli->query($sql);
+			while ($row = $query->fetch_assoc()) {
+				$gameId = (int)$row['gameID'];
+				if (!isset($playoffGames[$gameId])) {
+					continue;
+				}
+				$roundNum = $playoffGames[$gameId]['roundNum'];
+				$winnerID = $playoffGames[$gameId]['winnerID'];
+				if (!isset($playoffWeekStats[$roundNum]['scores'][$row['userID']])) {
+					$playoffWeekStats[$roundNum]['scores'][$row['userID']] = 0;
+				}
+				if ($row['pickTeamID'] == $winnerID) {
+					$playoffWeekStats[$roundNum]['scores'][$row['userID']] += 1;
+				}
+				if (!isset($playerTotals[$row['userID']]['wins'])) {
+					$playerTotals[$row['userID']]['wins'] = 0;
+				}
+				if (!isset($playerTotals[$row['userID']]['score'])) {
+					$playerTotals[$row['userID']]['score'] = 0;
+				}
+				$playerTotals[$row['userID']]['name'] = $row['firstname'] . ' ' . $row['lastname'];
+				$playerTotals[$row['userID']]['userName'] = $row['userName'];
+			}
+			if ($query) {
+				$query->free();
+			}
+		}
+		foreach ($playoffWeekStats as $roundNum => $stats) {
+			if (!empty($stats['scores'])) {
+				arsort($stats['scores']);
+				$highestScore = reset($stats['scores']);
+				$playoffWeekStats[$roundNum]['highestScore'] = $highestScore;
+				foreach ($stats['scores'] as $userID => $score) {
+					if ($score < $highestScore) break;
+					$playoffWeekStats[$roundNum]['winners'][] = $userID;
+					if (isset($playerTotals[$userID]['wins'])) {
+						$playerTotals[$userID]['wins'] += 1;
+					}
+				}
+				$key = 'P' . (int)$roundNum;
+				$label = isset($playoffRoundLabels[$roundNum]) ? $playoffRoundLabels[$roundNum] : ('P' . $roundNum);
+				$weekStats[$key] = array(
+					'winners' => $playoffWeekStats[$roundNum]['winners'],
+					'highestScore' => $playoffWeekStats[$roundNum]['highestScore'],
+					'possibleScore' => $playoffWeekStats[$roundNum]['possibleScore'],
+					'label' => $label,
+					'sortOrder' => 100 + (int)$roundNum,
+					'isPlayoff' => true
+				);
+			}
 		}
 		return array(
 			'weekStats' => $weekStats,

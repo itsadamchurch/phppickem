@@ -31,6 +31,13 @@ if ($weeks <= 0 || $weeks > 18) {
 	exit(1);
 }
 
+$lastCompletedWeek = (int)$statsService->getLastCompletedWeek();
+$maxWeek = min($weeks, $lastCompletedWeek);
+if ($maxWeek <= 0) {
+	fwrite(STDERR, "No completed weeks found. Nothing to seed.\n");
+	exit(0);
+}
+
 $users = array(
 	array('username' => 'bob', 'first' => 'Bob', 'last' => 'Loblaw', 'email' => 'bob@example.com'),
 	array('username' => 'sal', 'first' => 'Sal', 'last' => 'Goodman', 'email' => 'sal@example.com'),
@@ -208,7 +215,7 @@ function getPlayoffPick($userId, $gameId) {
 }
 
 if ($verbose) {
-	echo "Season 2025 pick flow test (weeks=" . $weeks . ", apply=" . ($apply ? '1' : '0') . ", seed=" . $seed . ")\n";
+	echo "Season 2025 pick flow test (weeks=" . $maxWeek . " of " . $weeks . ", apply=" . ($apply ? '1' : '0') . ", seed=" . $seed . ")\n";
 }
 
 foreach ($users as $user) {
@@ -344,7 +351,7 @@ function pickWeekOutcomes($games, $picksByUser, $winnerUsers, $weekSeed, &$warni
 	return array($outcomes, $counts);
 }
 
-for ($week = 1; $week <= $weeks; $week++) {
+for ($week = 1; $week <= $maxWeek; $week++) {
 	$weekSeed = $seed + ($week * 1000);
 	if (!isset($weekWinners[$week])) {
 		$errors[] = 'Missing week winner for week ' . $week;
@@ -521,7 +528,7 @@ if ($apply) {
 	}
 	if (!empty($stats['weekStats'])) {
 		foreach ($stats['weekStats'] as $week => $row) {
-			if ((int)$week > $weeks) {
+			if ((int)$week > $maxWeek) {
 				continue;
 			}
 			if (!empty($row['winners'])) {
@@ -551,7 +558,7 @@ if (!$apply) {
 }
 
 $playoffRounds = array();
-$playoffQuery = $mysqli->query("select playoffGameID, roundNum, gameTimeEastern, homeID, visitorID from " . DB_PREFIX . "playoff_schedule where is_bye = 0 order by roundNum, gameTimeEastern, playoffGameID");
+$playoffQuery = $mysqli->query("select playoffGameID, roundNum, gameTimeEastern, homeID, visitorID, homeScore, visitorScore from " . DB_PREFIX . "playoff_schedule where is_bye = 0 order by roundNum, gameTimeEastern, playoffGameID");
 if ($playoffQuery) {
 	while ($row = $playoffQuery->fetch_assoc()) {
 		if (empty($row['gameTimeEastern'])) {
@@ -569,7 +576,27 @@ if ($playoffQuery) {
 if (empty($playoffRounds)) {
 	echo $yellow . "No playoff games with times found; skipping playoff picks." . $reset . "\n";
 } else {
+	$completedPlayoffRounds = array();
 	foreach ($playoffRounds as $roundNum => $roundGames) {
+		$allComplete = true;
+		foreach ($roundGames as $roundGame) {
+			$homeScore = isset($roundGame['homeScore']) ? (int)$roundGame['homeScore'] : 0;
+			$visitorScore = isset($roundGame['visitorScore']) ? (int)$roundGame['visitorScore'] : 0;
+			if (($homeScore + $visitorScore) <= 0) {
+				$allComplete = false;
+				break;
+			}
+		}
+		if ($allComplete) {
+			$completedPlayoffRounds[$roundNum] = $roundGames;
+		} else {
+			break;
+		}
+	}
+	if (empty($completedPlayoffRounds)) {
+		echo $yellow . "No completed playoff rounds found; skipping playoff picks." . $reset . "\n";
+	} else {
+	foreach ($completedPlayoffRounds as $roundNum => $roundGames) {
 		$roundSeed = $seed + 50000 + ($roundNum * 1000);
 		$firstPlayoffGameTime = new DateTime($roundGames[0]['gameTimeEastern'], new DateTimeZone("America/New_York"));
 		$beforePlayoff = clone $firstPlayoffGameTime;
@@ -639,15 +666,9 @@ if (empty($playoffRounds)) {
 				}
 			}
 
-			foreach ($roundGames as $game) {
-				$homeScore = (mt_rand(0, 1) === 0) ? 1 : 0;
-				$visitorScore = $homeScore === 1 ? 0 : 1;
-				$updateSql = "update " . DB_PREFIX . "playoff_schedule set homeScore = " . $homeScore . ", visitorScore = " . $visitorScore . " where playoffGameID = " . (int)$game['playoffGameID'];
-				if (!$mysqli->query($updateSql)) {
-					$errors[] = 'Error updating playoff scores for gameID ' . (int)$game['playoffGameID'] . ': ' . $mysqli->error;
-				}
-			}
+			// Do not overwrite playoff scores; keep real completed scores.
 		}
+	}
 	}
 }
 
