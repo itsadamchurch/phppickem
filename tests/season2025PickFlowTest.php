@@ -34,7 +34,10 @@ if ($weeks <= 0 || $weeks > 18) {
 $users = array(
 	array('username' => 'bob', 'first' => 'Bob', 'last' => 'Loblaw', 'email' => 'bob@example.com'),
 	array('username' => 'sal', 'first' => 'Sal', 'last' => 'Goodman', 'email' => 'sal@example.com'),
-	array('username' => 'howie', 'first' => 'Howie', 'last' => 'Dewitt', 'email' => 'howie@example.com')
+	array('username' => 'howie', 'first' => 'Howie', 'last' => 'Dewitt', 'email' => 'howie@example.com'),
+	array('username' => 'willie', 'first' => 'Willie', 'last' => 'Makit', 'email' => 'willie@example.com'),
+	array('username' => 'justin', 'first' => 'Justin', 'last' => 'Case', 'email' => 'justin@example.com'),
+	array('username' => 'pete', 'first' => 'Pete', 'last' => 'Za', 'email' => 'pete@example.com')
 );
 $plainPassword = 'test1234';
 
@@ -220,25 +223,28 @@ $weekWinners = array(
 	1 => 'bob',
 	2 => 'sal',
 	3 => 'howie',
-	4 => 'bob',
+	4 => array('bob', 'sal'),
 	5 => 'sal',
 	6 => 'bob',
-	7 => 'howie',
+	7 => array('howie', 'pete'),
 	8 => 'sal',
 	9 => 'bob',
-	10 => 'sal',
+	10 => array('sal', 'willie'),
 	11 => 'howie',
 	12 => 'bob',
-	13 => 'sal',
+	13 => array('sal', 'justin'),
 	14 => 'bob',
 	15 => 'howie',
 	16 => 'sal',
 	17 => 'bob',
-	18 => 'howie'
+	18 => array('howie', 'willie')
 );
 
 $lastGameTime = null;
-$expectedWins = array('bob' => 0, 'sal' => 0, 'howie' => 0);
+$expectedWins = array();
+foreach ($users as $u) {
+	$expectedWins[$u['username']] = 0;
+}
 $weeklyWinCounts = array();
 
 function computeWeekCounts($games, $picksByUser, $outcomes) {
@@ -261,11 +267,12 @@ function computeWeekCounts($games, $picksByUser, $outcomes) {
 	return $counts;
 }
 
-function pickWeekOutcomes($games, $picksByUser, $winnerUser, $weekSeed, &$warnings) {
+function pickWeekOutcomes($games, $picksByUser, $winnerUsers, $weekSeed, &$warnings) {
 	$totalGames = count($games);
 	if ($totalGames === 0) {
 		return null;
 	}
+	$winnerUsers = is_array($winnerUsers) ? $winnerUsers : array($winnerUsers);
 	$minWinner = (int)ceil($totalGames * 0.60);
 	$maxWinner = (int)floor($totalGames * 0.85);
 	if ($maxWinner < $minWinner) {
@@ -281,9 +288,21 @@ function pickWeekOutcomes($games, $picksByUser, $winnerUser, $weekSeed, &$warnin
 			$outcomes[(int)$game['gameID']] = $winner;
 		}
 		$counts = computeWeekCounts($games, $picksByUser, $outcomes);
-		$winnerCount = $counts[$winnerUser];
+		$winnerCount = null;
+		foreach ($winnerUsers as $winnerUser) {
+			if (!isset($counts[$winnerUser])) {
+				continue 2;
+			}
+			if ($winnerCount === null) {
+				$winnerCount = $counts[$winnerUser];
+			} elseif ($counts[$winnerUser] !== $winnerCount) {
+				continue 2;
+			}
+		}
 		$others = $counts;
-		unset($others[$winnerUser]);
+		foreach ($winnerUsers as $winnerUser) {
+			unset($others[$winnerUser]);
+		}
 		$maxOther = max($others);
 		if ($winnerCount <= $maxOther) {
 			continue;
@@ -307,15 +326,16 @@ function pickWeekOutcomes($games, $picksByUser, $winnerUser, $weekSeed, &$warnin
 		return array($outcomes, $counts);
 	}
 
-	$warnings[] = 'Random outcome search failed; falling back to biased outcomes for ' . $winnerUser . '.';
+	$warnings[] = 'Random outcome search failed; falling back to biased outcomes for ' . implode(', ', $winnerUsers) . '.';
 	mt_srand($weekSeed + 9999);
 	$outcomes = array();
 	foreach ($games as $game) {
-		$winner = (mt_rand(1, 100) <= 70) ? $picksByUser[$winnerUser][(int)$game['gameID']] : ((mt_rand(0, 1) === 0) ? $game['homeID'] : $game['visitorID']);
+		$biasUser = $winnerUsers[0];
+		$winner = (mt_rand(1, 100) <= 70) ? $picksByUser[$biasUser][(int)$game['gameID']] : ((mt_rand(0, 1) === 0) ? $game['homeID'] : $game['visitorID']);
 		$outcomes[(int)$game['gameID']] = $winner;
 	}
 	$counts = computeWeekCounts($games, $picksByUser, $outcomes);
-	if ($counts[$winnerUser] >= $totalGames) {
+	if ($counts[$winnerUsers[0]] >= $totalGames) {
 		$flipGame = $games[0];
 		$flipId = (int)$flipGame['gameID'];
 		$outcomes[$flipId] = ($outcomes[$flipId] === $flipGame['homeID']) ? $flipGame['visitorID'] : $flipGame['homeID'];
@@ -330,9 +350,12 @@ for ($week = 1; $week <= $weeks; $week++) {
 		$errors[] = 'Missing week winner for week ' . $week;
 		continue;
 	}
-	$winnerUser = $weekWinners[$week];
-	$expectedWins[$winnerUser] += 1;
-	$winnerPickSide = ($winnerUser === 'sal') ? 'visitor' : 'home';
+	$winnerUsers = is_array($weekWinners[$week]) ? $weekWinners[$week] : array($weekWinners[$week]);
+	foreach ($winnerUsers as $winnerUser) {
+		if (isset($expectedWins[$winnerUser])) {
+			$expectedWins[$winnerUser] += 1;
+		}
+	}
 
 	$games = array();
 	$sql = "select gameID, gameTimeEastern, homeID, visitorID from " . DB_PREFIX . "schedule where weekNum = " . (int)$week . " order by gameTimeEastern, gameID";
@@ -390,16 +413,16 @@ for ($week = 1; $week <= $weeks; $week++) {
 		submitWeekPicks($userIds[$username], $week, $picksByUser[$username], $errors, $apply);
 	}
 
-	$outcomeResult = pickWeekOutcomes($games, $picksByUser, $winnerUser, $weekSeed, $warnings);
+	$outcomeResult = pickWeekOutcomes($games, $picksByUser, $winnerUsers, $weekSeed, $warnings);
 	if (!$outcomeResult) {
 		$errors[] = 'Could not determine outcomes for week ' . $week;
 		continue;
 	}
 	list($outcomes, $weekCounts) = $outcomeResult;
-	$winnerCount = $weekCounts[$winnerUser];
+	$winnerCount = $weekCounts[$winnerUsers[0]];
 	$maxOther = 0;
 	foreach ($weekCounts as $name => $count) {
-		if ($name === $winnerUser) {
+		if (in_array($name, $winnerUsers, true)) {
 			continue;
 		}
 		if ($count > $maxOther) {
@@ -407,15 +430,15 @@ for ($week = 1; $week <= $weeks; $week++) {
 		}
 	}
 	if ($winnerCount <= $maxOther) {
-		$errors[] = 'Week ' . $week . ' did not produce a unique winner for ' . $winnerUser;
+		$errors[] = 'Week ' . $week . ' did not produce a clear winner group for ' . implode(', ', $winnerUsers);
 	}
 	if ($winnerCount >= count($games)) {
-		$errors[] = 'Week ' . $week . ' produced a perfect week for ' . $winnerUser;
+		$errors[] = 'Week ' . $week . ' produced a perfect week for ' . implode(', ', $winnerUsers);
 	}
 	$weeklyWinCounts[$week] = $weekCounts;
 
 	if ($apply) {
-		$editUser = ($winnerUser !== 'bob') ? 'bob' : 'sal';
+		$editUser = (in_array('bob', $winnerUsers, true)) ? 'sal' : 'bob';
 		$editUserId = $userIds[$editUser];
 		$firstGameId = (int)$games[0]['gameID'];
 		$currentPick = getUserPick($editUserId, $firstGameId);
@@ -472,7 +495,12 @@ for ($week = 1; $week <= $weeks; $week++) {
 
 	if ($verbose && isset($weeklyWinCounts[$week])) {
 		$counts = $weeklyWinCounts[$week];
-		echo "Week " . $week . " results: bob=" . $counts['bob'] . ", sal=" . $counts['sal'] . ", howie=" . $counts['howie'] . "\n";
+		$summary = array();
+		foreach ($users as $u) {
+			$username = $u['username'];
+			$summary[] = $username . "=" . (isset($counts[$username]) ? $counts[$username] : 0);
+		}
+		echo "Week " . $week . " results: " . implode(", ", $summary) . "\n";
 	}
 }
 
@@ -487,7 +515,10 @@ if ($apply) {
 	}
 
 	$stats = $statsService->calculateStats();
-	$winCounts = array('bob' => 0, 'sal' => 0, 'howie' => 0);
+	$winCounts = array();
+	foreach ($users as $u) {
+		$winCounts[$u['username']] = 0;
+	}
 	if (!empty($stats['weekStats'])) {
 		foreach ($stats['weekStats'] as $week => $row) {
 			if ((int)$week > $weeks) {
