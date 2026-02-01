@@ -43,7 +43,7 @@ $mysqli = new mysqli(DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_PORT
 $mysqli->set_charset('utf8');
 if ($mysqli) {
 	//check for presence of install folder
-	if (is_dir('install')) {
+	if (is_dir('install') && file_exists('install/index.php')) {
 		//do a query to see if db installed
 		//$testQueryOK = false;
 		$sql = "select * from  " . DB_PREFIX . "teams";

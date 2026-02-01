@@ -36,6 +36,7 @@ Composer dependencies are installed automatically when the container starts (if 
 
 Turnkey behavior:
 - The app entrypoint waits for the DB to be ready and then removes `install/install.sql` after it confirms the schema exists.
+- In non‑dev containers (no `.git`), it removes the entire `install/` folder so the security warning is cleared.
 
 If you’re not using Docker, run Composer after install:
 

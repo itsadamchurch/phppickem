@@ -24,4 +24,9 @@ if [ -f /var/www/html/install/install.sql ]; then
   done
 fi
 
+if [ "${AUTO_REMOVE_INSTALL:-1}" = "1" ] && [ -d /var/www/html/install ] && [ ! -d /var/www/html/.git ]; then
+  rm -rf /var/www/html/install
+  echo "Install folder removed after successful DB check."
+fi
+
 exec apache2-foreground
