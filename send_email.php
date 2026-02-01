@@ -15,10 +15,106 @@ $stats = $statsService->calculateStats();
 $weekStats = $stats['weekStats'];
 $playerTotals = $stats['playerTotals'];
 $possibleScoreTotal = $stats['possibleScoreTotal'];
+$currentLeaders = '';
+$bestPickRatios = '';
+$addresses = '';
+$subject = '';
+$message = '';
+$weekLabel = 'Week ' . $week;
+$prevWeekLabel = 'Week ' . $prevWeek;
+$playoffRoundLabel = '';
+$seasonYear = defined('SEASON_YEAR') ? (int)SEASON_YEAR : (int)date('Y');
+$finalWinnerName = '';
+$finalWinningScore = 0;
+$finalPickRatio = '';
+$finalPickPercent = '';
+
+$playoffTotals = array();
+$playoffPossibleTotal = 0;
+$playoffPossibleQuery = $mysqli->query("select count(*) as cnt from " . DB_PREFIX . "playoff_schedule where is_bye = 0 and homeScore is not null and visitorScore is not null and (homeScore + visitorScore) > 0");
+if ($playoffPossibleQuery && $playoffPossibleQuery->num_rows > 0) {
+	$row = $playoffPossibleQuery->fetch_assoc();
+	$playoffPossibleTotal = (int)$row['cnt'];
+}
+if ($playoffPossibleQuery) {
+	$playoffPossibleQuery->free();
+}
+
+$playoffTotalsQuery = $mysqli->query("select p.userID, p.pickTeamID, s.homeID, s.visitorID, s.homeScore, s.visitorScore " .
+	"from " . DB_PREFIX . "playoff_picks p " .
+	"inner join " . DB_PREFIX . "playoff_schedule s on p.gameID = s.playoffGameID " .
+	"where s.is_bye = 0");
+if ($playoffTotalsQuery) {
+	while ($row = $playoffTotalsQuery->fetch_assoc()) {
+		$winnerID = '';
+		$homeScore = (int)$row['homeScore'];
+		$visitorScore = (int)$row['visitorScore'];
+		if ($homeScore + $visitorScore > 0) {
+			if ($homeScore > $visitorScore) $winnerID = $row['homeID'];
+			if ($visitorScore > $homeScore) $winnerID = $row['visitorID'];
+		}
+		if (!empty($winnerID) && $row['pickTeamID'] == $winnerID) {
+			$playoffTotals[$row['userID']] += 1;
+		} else {
+			$playoffTotals[$row['userID']] += 0;
+		}
+	}
+	$playoffTotalsQuery->free();
+}
+
+$nowEastern = phppickem_now_eastern_datetime();
+if ($nowEastern instanceof DateTime) {
+	$nowTime = $nowEastern;
+} else {
+	$nowTime = new DateTime($nowEastern, new DateTimeZone('America/New_York'));
+}
+$lastRegularGame = $statsService->getLastGameTime(18);
+if (!empty($lastRegularGame)) {
+	$lastRegularTime = new DateTime($lastRegularGame, new DateTimeZone('America/New_York'));
+	if ($nowTime > $lastRegularTime) {
+		$roundQuery = $mysqli->query("select roundNum, min(gameTimeEastern) as firstTime from " . DB_PREFIX . "playoff_schedule where is_bye = 0 group by roundNum order by roundNum");
+		if ($roundQuery && $roundQuery->num_rows > 0) {
+			$playoffRoundNames = array(
+				1 => 'WC',
+				2 => 'DIV',
+				3 => 'CONF',
+				4 => 'SB'
+			);
+			$lastRound = 0;
+			$nextRound = 0;
+			while ($row = $roundQuery->fetch_assoc()) {
+				$lastRound = (int)$row['roundNum'];
+				if (!empty($row['firstTime'])) {
+					$roundTime = new DateTime($row['firstTime'], new DateTimeZone('America/New_York'));
+					if ($roundTime >= $nowTime && $nextRound === 0) {
+						$nextRound = (int)$row['roundNum'];
+					}
+				}
+			}
+			$roundQuery->free();
+			$useRound = ($nextRound > 0) ? $nextRound : $lastRound;
+			if ($useRound > 0) {
+				$playoffRoundLabel = isset($playoffRoundNames[$useRound]) ? $playoffRoundNames[$useRound] : ('Round ' . $useRound);
+				$weekLabel = 'Playoffs - ' . $playoffRoundLabel;
+				$prevWeekLabel = $weekLabel;
+				$firstPlayoffQuery = $mysqli->query("select min(gameTimeEastern) as firstTime from " . DB_PREFIX . "playoff_schedule where roundNum = " . (int)$useRound . " and is_bye = 0");
+				if ($firstPlayoffQuery && $firstPlayoffQuery->num_rows > 0) {
+					$row = $firstPlayoffQuery->fetch_assoc();
+					if (!empty($row['firstTime'])) {
+						$firstGameTime = $row['firstTime'];
+					}
+				}
+				if ($firstPlayoffQuery) {
+					$firstPlayoffQuery->free();
+				}
+			}
+		}
+	}
+}
 
 $winners = '';
-if (sizeof($weekStats) > 0) {
-	foreach($weekStats[$prevWeek][winners] as $winner => $winnerID) {
+if (sizeof($weekStats) > 0 && isset($weekStats[$prevWeek]['winners'])) {
+	foreach($weekStats[$prevWeek]['winners'] as $winner => $winnerID) {
 		$tmpUser = $login->get_user_by_id($winnerID);
 		switch (USER_NAMES_DISPLAY) {
 			case 1:
@@ -37,26 +133,56 @@ if (sizeof($weekStats) > 0) {
 $tmpWins = 0;
 $i = 1;
 if (isset($playerTotals)) {
-	//show top 3 winners
-	arsort($playerTotals);
-	foreach($playerTotals as $playerID => $stats) {
-		if ($tmpWins < $stats[wins]) $tmpWins = $stats[wins]; //set initial number of wins
-		//if next lowest # of wins is reached, increase counter
-		if ($stats[wins] < $tmpWins ) $i++;
-		//if wins is zero or counter is 3 or higher, break
-		if ($stats[wins] == 0 || $i > 3) break;
+	//show top 3 leaders by total wins (games won), tie-breaker weekly wins
+	$sortedTotals = $playerTotals;
+	uasort($sortedTotals, function($a, $b) use ($playoffTotals) {
+		$winsA = (isset($a['score']) ? (int)$a['score'] : 0) + (isset($playoffTotals[$a['userID']]) ? $playoffTotals[$a['userID']] : 0);
+		$winsB = (isset($b['score']) ? (int)$b['score'] : 0) + (isset($playoffTotals[$b['userID']]) ? $playoffTotals[$b['userID']] : 0);
+		if ($winsA === $winsB) {
+			$weeklyA = isset($a['wins']) ? (int)$a['wins'] : 0;
+			$weeklyB = isset($b['wins']) ? (int)$b['wins'] : 0;
+			if ($weeklyA === $weeklyB) return 0;
+			return ($weeklyA < $weeklyB) ? 1 : -1;
+		}
+		return ($winsA < $winsB) ? 1 : -1;
+	});
+	foreach($sortedTotals as $playerID => $stats) {
+		$totalWins = (isset($stats['score']) ? (int)$stats['score'] : 0) + (isset($playoffTotals[$playerID]) ? $playoffTotals[$playerID] : 0);
+		$weeklyWins = isset($stats['wins']) ? (int)$stats['wins'] : 0;
+		if ($finalWinnerName === '') {
+			$finalWinningScore = $totalWins;
+			$totalPossible = $possibleScoreTotal + $playoffPossibleTotal;
+			$finalPickRatio = $totalWins . '/' . $totalPossible;
+			$finalPickPercent = ($totalPossible > 0) ? number_format((($totalWins / $totalPossible) * 100), 2) . '%' : '0.00%';
+			switch (USER_NAMES_DISPLAY) {
+				case 1:
+					$finalWinnerName = $stats['name'];
+					break;
+				case 2:
+					$finalWinnerName = $stats['userName'];
+					break;
+				default: //3
+					$finalWinnerName = $stats['name'] . ' (' . $stats['userName'] . ')';
+					break;
+			}
+		}
+		if ($tmpWins < $totalWins) $tmpWins = $totalWins; //set initial number of wins
+		if ($totalWins < $tmpWins ) $i++;
+		if ($totalWins == 0 || $i > 3) break;
+		$winsLabel = $totalWins . (($totalWins > 1) ? ' wins' : ' win');
+		$weeklyLabel = $weeklyWins . (($weeklyWins > 1) ? ' weekly wins' : ' weekly win');
 		switch (USER_NAMES_DISPLAY) {
 			case 1:
-				$currentLeaders .= $i . '. ' . $stats[name] . ' - ' . $stats[wins] . (($stats[wins] > 1) ? ' wins' : ' win') . '<br />';
+				$currentLeaders .= $i . '. ' . $stats['name'] . ' - ' . $winsLabel . ' (' . $weeklyLabel . ')<br />';
 				break;
 			case 2:
-				$currentLeaders .= $i . '. ' . $stats[userName] . ' - ' . $stats[wins] . (($stats[wins] > 1) ? ' wins' : ' win') . '<br />';
+				$currentLeaders .= $i . '. ' . $stats['userName'] . ' - ' . $winsLabel . ' (' . $weeklyLabel . ')<br />';
 				break;
 			default: //3
-				$currentLeaders .= $i . '. ' . $stats[name] . ' (' . $stats[userName] . ') - ' . $stats[wins] . (($stats[wins] > 1) ? ' wins' : ' win') . '<br />';
+				$currentLeaders .= $i . '. ' . $stats['name'] . ' (' . $stats['userName'] . ') - ' . $winsLabel . ' (' . $weeklyLabel . ')<br />';
 				break;
 		}
-		$tmpWins = $stats[wins]; //set last # wins
+		$tmpWins = $totalWins; //set last # wins
 	}
 }
 
@@ -66,25 +192,25 @@ if (isset($playerTotals)) {
 	//show top 3 pick ratios
 	$playerTotals = $statsService->sort2d($playerTotals, 'score', 'desc');
 	foreach($playerTotals as $playerID => $stats) {
-		if ($tmpScore < $stats[score]) $tmpScore = $stats[score]; //set initial top score
+		if ($tmpScore < $stats['score']) $tmpScore = $stats['score']; //set initial top score
 		//if next lowest score is reached, increase counter
-		if ($stats[score] < $tmpScore ) $i++;
+		if ($stats['score'] < $tmpScore ) $i++;
 		//if score is zero or counter is 3 or higher, break
-		if ($stats[score] == 0 || $i > 3) break;
-		$pickRatio = $stats[score] . '/' . $possibleScoreTotal;
-		$pickPercentage = number_format((($stats[score] / $possibleScoreTotal) * 100), 2) . '%';
+		if ($stats['score'] == 0 || $i > 3) break;
+		$pickRatio = $stats['score'] . '/' . $possibleScoreTotal;
+		$pickPercentage = number_format((($stats['score'] / $possibleScoreTotal) * 100), 2) . '%';
 		switch (USER_NAMES_DISPLAY) {
 			case 1:
-				$bestPickRatios .= $i . '. ' . $stats[name] . ' - ' . $pickRatio . ' (' . $pickPercentage . ')<br />';
+				$bestPickRatios .= $i . '. ' . $stats['name'] . ' - ' . $pickRatio . ' (' . $pickPercentage . ')<br />';
 				break;
 			case 2:
-				$bestPickRatios .= $i . '. ' . $stats[userName] . ' - ' . $pickRatio . ' (' . $pickPercentage . ')<br />';
+				$bestPickRatios .= $i . '. ' . $stats['userName'] . ' - ' . $pickRatio . ' (' . $pickPercentage . ')<br />';
 				break;
 			default: //3
-				$bestPickRatios .= $i . '. ' . $stats[name] . ' (' . $stats[userName] . ') - ' . $pickRatio . ' (' . $pickPercentage . ')<br />';
+				$bestPickRatios .= $i . '. ' . $stats['name'] . ' (' . $stats['userName'] . ') - ' . $pickRatio . ' (' . $pickPercentage . ')<br />';
 				break;
 		}
-		$tmpScore = $stats[score]; //set last # wins
+		$tmpScore = $stats['score']; //set last # wins
 	}
 }
 
@@ -98,8 +224,9 @@ if ($_POST['action'] == 'Select' && isset($_POST['cannedMsg'])) {
 	$messageTemplate = $row['message'];
 
 	//replace variables
-	$template_vars = array('{week}', '{first_game}', '{site_url}', '{rules_url}', '{winners}', '{previousWeek}', '{winningScore}', '{possibleScore}', '{currentLeaders}', '{bestPickRatios}');
-	$replacement_values = array($week, date('l F j, g:i a', strtotime($firstGameTime)), SITE_URL, SITE_URL . 'rules.php', $winners, $prevWeek, $weekStats[$prevWeek][highestScore], $statsService->getGameTotal($prevWeek), $currentLeaders, $bestPickRatios);
+	$template_vars = array('{week}', '{week_label}', '{first_game}', '{site_url}', '{rules_url}', '{winners}', '{previousWeek}', '{previousWeekLabel}', '{winningScore}', '{possibleScore}', '{currentLeaders}', '{bestPickRatios}', '{playoff_round_label}', '{season_year}', '{final_winner}', '{final_winningScore}', '{picks}', '{possible}', '{pickpercent}');
+	$prevWeekHigh = isset($weekStats[$prevWeek]['highestScore']) ? $weekStats[$prevWeek]['highestScore'] : 0;
+	$replacement_values = array($week, $weekLabel, date('l F j, g:i a', strtotime($firstGameTime)), SITE_URL, SITE_URL . 'rules.php', $winners, $prevWeek, $prevWeekLabel, $prevWeekHigh, $statsService->getGameTotal($prevWeek), $currentLeaders, $bestPickRatios, $playoffRoundLabel, $seasonYear, $finalWinnerName, $finalWinningScore, $finalPickRatio ? explode('/', $finalPickRatio)[0] : '', $finalPickRatio ? explode('/', $finalPickRatio)[1] : '', $finalPickPercent);
 	$subject = stripslashes(str_replace($template_vars, $replacement_values, $subjectTemplate));
 	$message = stripslashes(str_replace($template_vars, $replacement_values, $messageTemplate));
 }
@@ -147,7 +274,9 @@ if ($_POST['action'] == 'Send Message') {
 		//header('Location: send_email.php');
 		//exit;
 	}
-	$query->free();
+		if ($query) {
+			$query->free();
+		}
 }
 
 include('includes/header.php');
