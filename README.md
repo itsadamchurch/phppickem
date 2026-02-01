@@ -34,6 +34,9 @@ Then open `http://localhost:8080/` in your browser. Default login is `admin / ad
 
 Composer dependencies are installed automatically when the container starts (if `vendor/` is missing).
 
+Turnkey behavior:
+- The app entrypoint waits for the DB to be ready and then removes `install/install.sql` after it confirms the schema exists.
+
 If you’re not using Docker, run Composer after install:
 
 ```
@@ -45,6 +48,38 @@ To stop:
 ```
 docker compose down
 ```
+
+### Docker (turnkey image)
+
+Build a shareable image:
+
+```
+docker build -t yourname/phppickem:2025 .
+```
+
+Run without bind-mounting the repo:
+
+```
+docker run -d --name phppickem \
+  -p 8080:80 \
+  -e DB_HOSTNAME=db \
+  -e DB_USERNAME=nflpickem \
+  -e DB_PASSWORD=nflpickem \
+  -e DB_DATABASE=nflpickem \
+  yourname/phppickem:2025
+```
+
+If you use the included `docker-compose.yml`, the DB is created automatically from `install/install.sql` and the install file is removed on first successful boot.
+
+### Docker Compose (production)
+
+Use the prebuilt image without bind mounts:
+
+```
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Edit `docker-compose.prod.yml` to set your image name/tag (default: `yourname/phppickem:2025`).
 
 ## Playoffs (import + picks)
 
