@@ -1,6 +1,11 @@
 <?php
 require('includes/application_top.php');
 
+if (!$user->is_admin) {
+	header('Location: ./');
+	exit;
+}
+
 $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)SEASON_YEAR;
 $apply = (isset($_GET['apply']) && $_GET['apply'] === '1');
 

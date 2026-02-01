@@ -1,6 +1,11 @@
 <?php
 require('includes/application_top.php');
 
+if (!$user->is_admin) {
+	header('HTTP/1.1 403 Forbidden');
+	exit;
+}
+
 header('Content-Type: application/json; charset=utf-8');
 
 $week = (int)$_GET['week'];
