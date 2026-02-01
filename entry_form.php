@@ -10,7 +10,7 @@ if ($_POST['action'] == 'Submit') {
 		$round = (int)$_POST['round'];
 		$sql = "select * from " . DB_PREFIX . "playoff_schedule where roundNum = " . $round . " and is_bye = 0";
 		$query = $mysqli->query($sql);
-		$nowEastern = new DateTime("now", new DateTimeZone("America/New_York"));
+		$nowEastern = phppickem_now_eastern_datetime();
 		if ($query->num_rows > 0) {
 			while ($row = $query->fetch_assoc()) {
 				if (!empty($row['gameTimeEastern'])) {
@@ -42,7 +42,8 @@ if ($_POST['action'] == 'Submit') {
 	$mysqli->query($sql) or die('Error updating picks summary: ' . $mysqli->error);
 
 	//loop through non-expire weeks and update picks
-	$sql = "select * from " . DB_PREFIX . "schedule where weekNum = " . $_POST['week'] . " and (DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) < gameTimeEastern);";
+	$nowSql = phppickem_now_eastern_sql();
+	$sql = "select * from " . DB_PREFIX . "schedule where weekNum = " . $_POST['week'] . " and (" . $nowSql . " < gameTimeEastern);";
 	$query = $mysqli->query($sql);
 	if ($query->num_rows > 0) {
 		while ($row = $query->fetch_assoc()) {
@@ -64,7 +65,7 @@ if ($_POST['action'] == 'Submit') {
 			$sql = "select roundNum, min(gameTimeEastern) as firstGameTime, max(gameTimeEastern) as lastGameTime ";
 			$sql .= "from " . DB_PREFIX . "playoff_schedule where is_bye = 0 group by roundNum order by roundNum asc";
 			$query = $mysqli->query($sql);
-			$nowEastern = new DateTime("now", new DateTimeZone("America/New_York"));
+			$nowEastern = phppickem_now_eastern_datetime();
 			if ($query->num_rows > 0) {
 				while ($row = $query->fetch_assoc()) {
 					if (empty($row['firstGameTime'])) {
@@ -257,7 +258,8 @@ include('includes/column_right.php');
 		$sql .= "where s.roundNum = " . $round . " and s.is_bye = 0 ";
 		$sql .= "order by s.gameTimeEastern, s.playoffGameID";
 	} else {
-		$sql = "select s.*, (DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) > gameTimeEastern)  as expired ";
+		$nowSql = phppickem_now_eastern_sql();
+		$sql = "select s.*, (" . $nowSql . " > gameTimeEastern) as expired ";
 		$sql .= "from " . DB_PREFIX . "schedule s ";
 		$sql .= "inner join " . DB_PREFIX . "teams ht on s.homeID = ht.teamID ";
 		$sql .= "inner join " . DB_PREFIX . "teams vt on s.visitorID = vt.teamID ";
@@ -267,7 +269,7 @@ include('includes/column_right.php');
 	//echo $sql;
 	$query = $mysqli->query($sql) or die($mysqli->error);
 	if ($query->num_rows > 0) {
-		$nowEastern = new DateTime("now", new DateTimeZone("America/New_York"));
+		$nowEastern = phppickem_now_eastern_datetime();
 		echo '<form name="entryForm" action="entry_form.php" method="post" onsubmit="return checkform();">' . "\n";
 		if ($type === 'playoffs') {
 			echo '<input type="hidden" name="type" value="playoffs" />' . "\n";

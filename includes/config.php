@@ -61,3 +61,39 @@ $offsetCurrent = $dateTimeCurrent->getOffset();
 $offsetEastern = $dateTimeEastern->getOffset();
 $offsetHours = ($offsetEastern - $offsetCurrent) / 3600;
 define('SERVER_TIMEZONE_OFFSET', $offsetHours);
+
+function phppickem_test_now_eastern() {
+	$override = getenv('TEST_NOW_EASTERN');
+	if ($override !== false && $override !== '') {
+		return $override;
+	}
+	return null;
+}
+
+function phppickem_now_eastern_unix() {
+	$override = phppickem_test_now_eastern();
+	if ($override) {
+		$dt = DateTime::createFromFormat('Y-m-d H:i:s', $override, new DateTimeZone("America/New_York"));
+		if ($dt) {
+			return $dt->getTimestamp();
+		}
+	}
+	return time() + (SERVER_TIMEZONE_OFFSET * 3600);
+}
+
+function phppickem_now_eastern_datetime() {
+	$override = phppickem_test_now_eastern();
+	if ($override) {
+		return new DateTime($override, new DateTimeZone("America/New_York"));
+	}
+	return new DateTime("now", new DateTimeZone("America/New_York"));
+}
+
+function phppickem_now_eastern_sql() {
+	$override = phppickem_test_now_eastern();
+	if ($override) {
+		$safe = str_replace("'", "''", $override);
+		return "'" . $safe . "'";
+	}
+	return "DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR)";
+}

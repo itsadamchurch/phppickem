@@ -16,7 +16,7 @@ if ($user->userName == 'admin') {
 } else {
 	if ($weekExpired) {
 		//current week is expired, show message
-		$nowEastern = new DateTime("now", new DateTimeZone("America/New_York"));
+		$nowEastern = phppickem_now_eastern_datetime();
 		$playoffOpen = false;
 		$currentPlayoffRound = 0;
 		$playoffRoundNames = array(
@@ -71,13 +71,13 @@ include('includes/column_right.php');
 	<?php
 	$lastCompletedWeek = $statsService->getLastCompletedWeek();
 	$glanceItems = array();
-	$nowEastern = new DateTime("now", new DateTimeZone("America/New_York"));
+	$nowEastern = phppickem_now_eastern_datetime();
 
 	// regular season weeks
 	$sql = "select s.weekNum, count(s.gameID) as gamesTotal,";
 	$sql .= " min(s.gameTimeEastern) as firstGameTime,";
 	$sql .= " max(s.gameTimeEastern) as lastGameTime,";
-	$sql .= " (DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) > max(s.gameTimeEastern)) as expired ";
+	$sql .= " (" . phppickem_now_eastern_sql() . " > max(s.gameTimeEastern)) as expired ";
 	$sql .= "from " . DB_PREFIX . "schedule s ";
 	$sql .= "group by s.weekNum ";
 	$sql .= "order by s.weekNum;";

@@ -6,7 +6,8 @@ class StatsService {
 	public function getCurrentWeek() {
 		//get the current week number
 		global $mysqli;
-		$sql = "select distinct weekNum from " . DB_PREFIX . "schedule where DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) < gameTimeEastern order by weekNum limit 1";
+		$nowSql = phppickem_now_eastern_sql();
+		$sql = "select distinct weekNum from " . DB_PREFIX . "schedule where " . $nowSql . " < gameTimeEastern order by weekNum limit 1";
 		$query = $mysqli->query($sql);
 		if ($query->num_rows > 0) {
 			$row = $query->fetch_assoc();
@@ -196,7 +197,8 @@ class StatsService {
 	public function gameIsLocked($gameID) {
 		//find out if a game is locked
 		global $mysqli, $cutoffDateTime;
-		$sql = "select (DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) > gameTimeEastern or DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) > '" . $cutoffDateTime . "')  as expired from " . DB_PREFIX . "schedule where gameID = " . $gameID;
+		$nowSql = phppickem_now_eastern_sql();
+		$sql = "select (" . $nowSql . " > gameTimeEastern or " . $nowSql . " > '" . $cutoffDateTime . "') as expired from " . DB_PREFIX . "schedule where gameID = " . $gameID;
 		$query = $mysqli->query($sql);
 		if ($query->num_rows > 0) {
 			$row = $query->fetch_assoc();
@@ -222,10 +224,11 @@ class StatsService {
 	public function getLastCompletedWeek() {
 		global $mysqli;
 		$lastCompletedWeek = 0;
+		$nowSql = phppickem_now_eastern_sql();
 		$sql = "select s.weekNum, max(s.gameTimeEastern) as lastGameTime,";
 		$sql .= " (select count(*) from " . DB_PREFIX . "schedule where weekNum = s.weekNum and (homeScore is NULL or visitorScore is null)) as scoresMissing ";
 		$sql .= "from " . DB_PREFIX . "schedule s ";
-		$sql .= "where s.gameTimeEastern < DATE_ADD(NOW(), INTERVAL " . SERVER_TIMEZONE_OFFSET . " HOUR) ";
+		$sql .= "where s.gameTimeEastern < " . $nowSql . " ";
 		$sql .= "group by s.weekNum ";
 		$sql .= "order by s.weekNum";
 		//echo $sql;

@@ -48,7 +48,8 @@ header('X-UA-Compatible:IE=Edge,chrome=1'); //IE8 respects this but not the meta
 								<?php if ($user->userName !== 'admin') { ?>
 								<?php
 									$playoffsAvailable = false;
-									$nowEastern = new DateTime("now", new DateTimeZone("America/New_York"));
+									$nowEastern = phppickem_now_eastern_datetime();
+									$testNowEastern = getenv('TEST_NOW_EASTERN');
 									$lastWeekTime = $statsService->getLastGameTime(18);
 									if (!empty($lastWeekTime)) {
 										$lastWeekTimeObj = new DateTime($lastWeekTime, new DateTimeZone("America/New_York"));
@@ -97,6 +98,14 @@ header('X-UA-Compatible:IE=Edge,chrome=1'); //IE8 respects this but not the meta
 			</div>
 		</header>
 		<div id="pageContent">
+		<?php if (!empty($testNowEastern)) { ?>
+			<div class="bg-warning" style="margin: 10px 0; padding: 8px;">
+				<b>TEST_NOW_EASTERN</b> override active. now=<?php echo $nowEastern->format('Y-m-d H:i:s'); ?> ET,
+				override=<?php echo $testNowEastern; ?>,
+				lastWeekTime=<?php echo !empty($lastWeekTime) ? $lastWeekTime : 'n/a'; ?>,
+				playoffsAvailable=<?php echo $playoffsAvailable ? '1' : '0'; ?>
+			</div>
+		<?php } ?>
 		<?php
 		if ($user->is_admin && is_array($warnings) && sizeof($warnings) > 0) {
 			echo '<div id="warnings">';
